@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lordnine Boss Monitoring</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-0">
+
+  <!-- 🔔 Sticky Banner -->
+  <div id="nextRespawnBanner" class="w-full bg-blue-800 text-center p-3 font-bold text-lg sticky top-0 z-50 shadow-lg">
+    Loading next respawn...
+  </div>
+
+  <h1 class="text-3xl font-bold my-6">Lordnine Boss Monitoring</h1>
+
+  <!-- Add Boss Kill Form -->
+  <div class="w-full max-w-2xl bg-gray-800 p-4 rounded-xl shadow-lg">
+    <h2 class="text-xl font-semibold mb-3">Add Boss Kill</h2>
+    <form id="bossForm" class="space-y-3">
+      <select id="bossName" class="w-full p-2 rounded bg-gray-700" required>
+        <option value="" disabled selected>Select Boss</option>
+        <option value="Venatus">Venatus (10h)</option>
+        <option value="Viorent">Viorent (10h)</option>
+        <option value="Araneo">Araneo (24h)</option>
+        <option value="Undomiel">Undomiel (24h)</option>
+        <option value="Lady Dalia">Lady Dalia (18h)</option>
+        <option value="Amentis">Amentis (29h)</option>
+      </select>
+      <input type="datetime-local" id="deathTime" class="w-full p-2 rounded bg-gray-700" required>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded">Save</button>
+    </form>
+  </div>
+
+  <!-- Sections -->
+  <h2 class="text-2xl font-semibold mt-8 mb-4">⏳ Not Yet Respawned</h2>
+  <div id="waitingList" class="w-full max-w-3xl space-y-3"></div>
+
+  <h2 class="text-2xl font-semibold mt-8 mb-4">✅ Alive</h2>
+  <div id="aliveList" class="w-full max-w-3xl space-y-3"></div>
+
+  <script>
+    const API_URL = "https://sheetdb.io/api/v1/fb5qak8hqflkg"; // Your SheetDB API
+
+    const RESPAWN_RULES = {
+      "Venatus": 10,
+      "Viorent": 10,
+      "Araneo": 24,
+      "Undomiel": 24,
+      "Lady Dalia": 18,
+      "Amentis": 29
+    };
+
+    const bossForm = document.getElementById("bossForm");
+    const waitingList = document.getElementById("waitingList");
+    const aliveList = document.getElementById("aliveList");
+    const nextRespawnBanner = document.getElementById("nextRespawnBanner");
+
+    bossForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const bossName = document.getElementById("bossName").value;
+      const deathTime = document.getElementById("deathTime").value;
+
+      if (bossName && deathTime) {
+        const respawnHours = RESPAWN_RULES[bossName] || 12;
+        const deathDate = new Date(deathTime);
+        const respawnDate = new Date(deathDate.getTime() + respawnHours * 60 * 60 * 1000);
+        const respawnTime = respawnDate.toISOString().slice(0,16).replace("T", " ");
+
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: { "Boss Name": bossName, "Death Time": deathTime, "Respawn Time": respawnTime } })
+        });
+        loadBosses();
+      }
+
+      bossForm.reset();
+    });
+
+    async function loadBosses() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      // Sort by respawn time (earliest first)
+      data.sort((a, b) => {
+        if (!a["Respawn Time"]) return 1;
+        if (!b["Respawn Time"]) return -1;
+        return new Date(a["Respawn Time"]) - new Date(b["Respawn Time"]);
+      });
+
+      waitingList.innerHTML = "";
+      aliveList.innerHTML = "";
+      const now = new Date();
+
+      let soonestBoss = null;
+      let soonestTime = null;
+
+      data.forEach(row => {
+        const name = row["Boss Name"];
+        const death = row["Death Time"];
+        const respawn = row["Respawn Time"];
+        if (!name) return;
+
+        const respawnDate = respawn ? new Date(respawn.replace(" ", "T")) : null;
+        let titleText = name;
+        let titleColor = "text-white";
+
+        if (respawnDate) {
+          const diffMs = respawnDate - now;
+          if (diffMs <= 0) {
+            titleText = `${name} — ✅ Alive`;
+            titleColor = "text-green-400";
+          } else {
+            const diffMin = Math.floor(diffMs / 60000);
+            const hours = Math.floor(diffMin / 60);
+            const minutes = diffMin % 60;
+            titleText = `${name} — Respawns in ${hours}h ${minutes}m`;
+
+            if (diffMin < 60) {
+              titleColor = "text-red-400";
+            } else if (diffMin < 360) {
+              titleColor = "text-yellow-400";
+            } else {
+              titleColor = "text-white";
+            }
+
+            // Track soonest respawn
+            if (!soonestTime || respawnDate < soonestTime) {
+              soonestTime = respawnDate;
+              soonestBoss = name;
+            }
+          }
+        }
+
+        const card = document.createElement("div");
+        card.className = "bg-gray-800 p-4 rounded-lg shadow";
+        card.innerHTML = `
+          <h3 class="text-lg font-bold ${titleColor}">${titleText}</h3>
+          <p><strong>Date and time of death:</strong> ${death || "Not set"}</p>
+          <p><strong>Date and time of respawn:</strong> 
+            <span class="respawn-time">${respawn || "Not set"}</span>
+            <span class="countdown ml-2 text-yellow-400"></span>
+          </p>
+        `;
+
+        if (respawnDate && respawnDate <= now) {
+          aliveList.appendChild(card);
+        } else {
+          waitingList.appendChild(card);
+        }
+      });
+
+      updateNextRespawnBanner(soonestBoss, soonestTime);
+      startCountdowns();
+    }
+
+    function updateNextRespawnBanner(bossName, respawnDate) {
+      if (!bossName || !respawnDate) {
+        nextRespawnBanner.textContent = "No upcoming respawns";
+        return;
+      }
+
+      function refreshBanner() {
+        const diffMs = respawnDate - new Date();
+        if (diffMs <= 0) {
+          nextRespawnBanner.textContent = `${bossName} — ✅ Alive now!`;
+          nextRespawnBanner.className = "w-full bg-green-700 text-center p-3 font-bold text-lg sticky top-0 z-50 shadow-lg";
+          return;
+        }
+        const diffMin = Math.floor(diffMs / 60000);
+        const hours = Math.floor(diffMin / 60);
+        const minutes = diffMin % 60;
+        nextRespawnBanner.textContent = `🔔 Next: ${bossName} respawns in ${hours}h ${minutes}m`;
+      }
+
+      refreshBanner();
+      setInterval(refreshBanner, 1000);
+    }
+
+    function startCountdowns() {
+      document.querySelectorAll(".respawn-time").forEach(el => {
+        const respawnText = el.textContent;
+        if (!respawnText || respawnText === "Not set") return;
+
+        const countdownEl = el.parentElement.querySelector(".countdown");
+        const cardTitle = el.closest(".bg-gray-800").querySelector("h3");
+        const respawnDate = new Date(respawnText.replace(" ", "T"));
+
+        function updateCountdown() {
+          const diffMs = respawnDate - new Date();
+          if (diffMs <= 0) {
+            countdownEl.textContent = "✅ Alive";
+            countdownEl.className = "countdown ml-2 text-green-400 font-bold";
+            cardTitle.textContent = `${cardTitle.textContent.split(" — ")[0]} — ✅ Alive`;
+            cardTitle.className = "text-lg font-bold text-green-400";
+            return;
+          }
+          const diffSec = Math.floor(diffMs / 1000);
+          const hours = Math.floor(diffSec / 3600);
+          const minutes = Math.floor((diffSec % 3600) / 60);
+          const seconds = diffSec % 60;
+
+          countdownEl.textContent = `Respawns in ${hours}h ${minutes}m ${seconds}s`;
+          cardTitle.textContent = `${cardTitle.textContent.split(" — ")[0]} — Respawns in ${hours}h ${minutes}m`;
+
+          if (hours < 1) {
+            cardTitle.className = "text-lg font-bold text-red-400";
+          } else if (hours < 6) {
+            cardTitle.className = "text-lg font-bold text-yellow-400";
+          } else {
+            cardTitle.className = "text-lg font-bold text-white";
+          }
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      });
+    }
+
+    // First load
+    loadBosses();
+
+    // 🔄 Auto-refresh every 1 minute
+    setInterval(loadBosses, 60 * 1000);
+  </script>
+</body>
+</html>
