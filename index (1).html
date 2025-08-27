@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lordnine Boss Monitoring</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #121212; color: #f0f0f0; margin: 0; padding: 0; }
+    header { background: #222; padding: 1em; text-align: center; position: sticky; top: 0; z-index: 1000; }
+    #nextRespawn { font-size: 1.2em; font-weight: bold; color: #00e676; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; padding: 1em; }
+    section { background: #1e1e1e; padding: 1em; border-radius: 10px; }
+    h2 { border-bottom: 1px solid #333; padding-bottom: 0.5em; }
+    .card { background: #2a2a2a; padding: 1em; border-radius: 8px; margin: 0.5em 0; }
+    .card h3 { margin: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="nextRespawn">Loading next respawn...</div>
+  </header>
+  <main>
+    <section>
+      <h2>Alive</h2>
+      <div id="alive"></div>
+    </section>
+    <section>
+      <h2>Not Yet Respawned</h2>
+      <div id="not-yet"></div>
+    </section>
+  </main>
+
+  <script>
+  const API_URL = "https://sheetdb.io/api/v1/fb5qak8hqflkg";
+
+  // Respawn timers (hours)
+  const RESPAWN_TIMERS = {
+    "Venatus": 10,
+    "Viorent": 10,
+    "Araneo": 24,
+    "Undomiel": 24,
+    "Lady Dalia": 18,
+    "Amentis": 29,
+  };
+
+  async function fetchBosses() {
+    const res = await fetch(API_URL);
+    const bosses = await res.json();
+
+    const aliveSection = document.getElementById("alive");
+    const deadSection = document.getElementById("not-yet");
+    aliveSection.innerHTML = "";
+    deadSection.innerHTML = "";
+
+    let soonestBoss = null;
+    let soonestRespawn = Infinity;
+
+    bosses.forEach(boss => {
+      const name = boss["Boss name"];
+      const deathStr = boss["Date and time of death"];
+
+      if (!name || !deathStr) return;
+
+      const deathTime = new Date(deathStr);
+      const hours = RESPAWN_TIMERS[name];
+      if (!hours) return;
+
+      const respawnTime = new Date(deathTime.getTime() + hours * 60 * 60 * 1000);
+      const now = new Date();
+      const diffMs = respawnTime - now;
+      const diffMin = Math.max(0, Math.floor(diffMs / 60000));
+      const diffH = Math.floor(diffMin / 60);
+      const diffM = diffMin % 60;
+
+      let status, color;
+      if (diffMs <= 0) {
+        status = "Alive";
+        color = "green";
+      } else if (diffMs < 3600000) {
+        status = `Respawns in ${diffH}h ${diffM}m`;
+        color = "red";
+      } else if (diffMs < 21600000) {
+        status = `Respawns in ${diffH}h ${diffM}m`;
+        color = "yellow";
+      } else {
+        status = `Respawns in ${diffH}h ${diffM}m`;
+        color = "orange";
+      }
+
+      if (diffMs > 0 && diffMs < soonestRespawn) {
+        soonestRespawn = diffMs;
+        soonestBoss = { name, status };
+      }
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <h3 style="color:${color}">${name} - ${status}</h3>
+        <p><strong>Death:</strong> ${deathTime.toLocaleString()}</p>
+        <p><strong>Respawn:</strong> ${respawnTime.toLocaleString()}</p>
+      `;
+
+      if (diffMs <= 0) {
+        aliveSection.appendChild(card);
+      } else {
+        deadSection.appendChild(card);
+      }
+    });
+
+    const banner = document.getElementById("nextRespawn");
+    if (soonestBoss) {
+      const soonestMin = Math.floor(soonestRespawn / 60000);
+      const h = Math.floor(soonestMin / 60);
+      const m = soonestMin % 60;
+      banner.innerText = `Next Respawn: ${soonestBoss.name} (${h}h ${m}m)`;
+    } else {
+      banner.innerText = "All bosses are alive!";
+    }
+  }
+
+  fetchBosses();
+  setInterval(fetchBosses, 60000);
+  </script>
+</body>
+</html>
