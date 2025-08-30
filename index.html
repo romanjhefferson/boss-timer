@@ -39,8 +39,10 @@
       "Ego": 21,
       "Livera": 24,
       "General Aquleus": 29,
-      "Baron Braudmore": 32
-      "Wannitas": 48
+      "Baron Braudmore": 32,
+      "Wannitas": 48,
+      "Meuts": 48,
+      "Duplican": 48
     };
 
     async function fetchData() {
@@ -70,10 +72,10 @@
           if (diffH < 1) color = "red";
           else if (diffH < 6) color = "yellow";
           else color = "black";
-          title = `<span class=\"${color}\">${boss} — Respawns in ${diffH}h ${diffM}m</span>`;
+          title = `<span class="${color}">${boss} — Respawns in ${diffH}h ${diffM}m</span>`;
           upcoming.push({ boss, title, deathTime, respawn });
         } else {
-          title = `<span class=\"green\">${boss} — Alive</span>`;
+          title = `<span class="green">${boss} — Alive</span>`;
           alive.push({ boss, title, deathTime, respawn });
         }
       });
