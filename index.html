@@ -8,23 +8,59 @@
     body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
     header { background: #222; color: white; padding: 1rem; text-align: center; position: sticky; top: 0; z-index: 10; }
     #nextRespawn { font-weight: bold; font-size: 1.2rem; }
-    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; padding: 1rem; }
-    .card { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    .card h2 { margin: 0; font-size: 1.2rem; }
-    .red { color: red; }
-    .yellow { color: goldenrod; }
-    .green { color: green; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.95rem; }
+    th { background: #f0f0f0; font-weight: bold; }
+    tr:last-child td { border-bottom: none; }
+    .red { color: red; font-weight: bold; }
+    .yellow { color: goldenrod; font-weight: bold; }
+    .green { color: green; font-weight: bold; }
+    .highlight { background: #d1f0d1; border-left: 5px solid green; }
     h3 { margin-top: 2rem; margin-left: 1rem; }
+    .badge { background: #eee; border-radius: 12px; padding: 2px 8px; font-size: 0.8rem; margin-left: 5px; }
   </style>
 </head>
 <body>
   <header>
     Lordnine Boss Monitoring — <span id="nextRespawn">Loading...</span>
   </header>
-  <h3>Not yet respawned</h3>
-  <div class="container" id="upcoming"></div>
+
+  <h3>Dynamic Respawns</h3>
+  <table id="upcoming">
+    <thead>
+      <tr>
+        <th>Boss</th>
+        <th>Status</th>
+        <th>Respawn Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <h3>Alive</h3>
-  <div class="container" id="alive"></div>
+  <table id="alive">
+    <thead>
+      <tr>
+        <th>Boss</th>
+        <th>Status</th>
+        <th>Death Time</th>
+        <th>Respawn Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Fixed Schedule Respawns</h3>
+  <table id="fixed">
+    <thead>
+      <tr>
+        <th>Boss</th>
+        <th>Status</th>
+        <th>Respawn Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
     const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
@@ -41,9 +77,47 @@
       "General Aquleus": 29,
       "Baron Braudmore": 32,
       "Wannitas": 48,
-      "Meuts": 48,
-      "Duplican": 48
+      "Metus": 48,
+      "Duplican": 48,
+      "Shuliar": 35
     };
+
+    const fixedSchedules = {
+      "Clemantis": [
+        { day: 1, hour: 11, minute: 30 },
+        { day: 4, hour: 19, minute: 0 }
+      ],
+      "Saphirus": [
+        { day: 2, hour: 11, minute: 30 },
+        { day: 0, hour: 17, minute: 0 }
+      ],
+      "Neutro": [
+        { day: 2, hour: 19, minute: 0 },
+        { day: 4, hour: 11, minute: 30 }
+      ],
+      "Milavy": [
+        { day: 6, hour: 15, minute: 0 }
+      ],
+      "Ringor": [
+        { day: 6, hour: 17, minute: 0 }
+      ]
+    };
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const h = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${d} ${h}:${min}`;
+    }
+
+    function relativeBadge(date, now) {
+      const diffDays = Math.floor((date - now) / (1000*60*60*24));
+      if (diffDays === 0) return '<span class="badge">Today</span>';
+      if (diffDays === 1) return '<span class="badge">Tomorrow</span>';
+      return `<span class="badge">In ${diffDays} days</span>`;
+    }
 
     async function fetchData() {
       const res = await fetch(sheetURL);
@@ -55,7 +129,9 @@
       const now = new Date();
       let upcoming = [];
       let alive = [];
+      let fixedUpcoming = [];
 
+      // Dynamic bosses
       data.forEach(row => {
         const boss = row.Boss.trim();
         const deathTime = new Date(row.DeathTime);
@@ -67,42 +143,82 @@
         const diffH = Math.floor(diffMs / (1000*60*60));
         const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
 
-        let color, title;
+        let status;
         if (diffMs > 0) {
-          if (diffH < 1) color = "red";
-          else if (diffH < 6) color = "yellow";
-          else color = "black";
-          title = `<span class="${color}">${boss} — Respawns in ${diffH}h ${diffM}m</span>`;
-          upcoming.push({ boss, title, deathTime, respawn });
+          if (diffH < 1) status = `🔴 <span class='red'>Very Soon</span>`;
+          else if (diffH < 6) status = `🟡 <span class='yellow'>Soon</span>`;
+          else status = "⏳ Upcoming";
+          upcoming.push({ boss, status, respawn });
         } else {
-          title = `<span class="green">${boss} — Alive</span>`;
-          alive.push({ boss, title, deathTime, respawn });
+          status = `🟢 <span class='green'>Alive</span>`;
+          alive.push({ boss, status, deathTime, respawn });
         }
       });
 
+      // Fixed schedule bosses
+      Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
+        schedules.forEach(s => {
+          const respawn = new Date(now);
+          respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
+          respawn.setHours(s.hour, s.minute, 0, 0);
+
+          if (respawn < now) {
+            respawn.setDate(respawn.getDate() + 7);
+          }
+
+          const diffMs = respawn - now;
+          const diffH = Math.floor(diffMs / (1000*60*60));
+          const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
+
+          let status = `⏳ Respawns in ${diffH}h ${diffM}m ${relativeBadge(respawn, now)}`;
+          let highlight = now.getDay() === s.day ? "highlight" : "";
+          fixedUpcoming.push({ boss, status, respawn, highlight });
+        });
+      });
+
       upcoming.sort((a,b) => a.respawn - b.respawn);
+      fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
-      document.getElementById("upcoming").innerHTML = upcoming.map(r => `
-        <div class="card">
-          <h2>${r.title}</h2>
-          <p>Death Time: ${r.deathTime}</p>
-          <p>Respawn Time: ${r.respawn}</p>
-        </div>`).join("");
+      document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => `
+        <tr>
+          <td>${r.boss}</td>
+          <td>${r.status}</td>
+          <td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td>
+        </tr>`).join("");
 
-      document.getElementById("alive").innerHTML = alive.map(r => `
-        <div class="card">
-          <h2>${r.title}</h2>
-          <p>Death Time: ${r.deathTime}</p>
-          <p>Respawn Time: ${r.respawn}</p>
-        </div>`).join("");
+      document.querySelector("#alive tbody").innerHTML = alive.map(r => `
+        <tr>
+          <td>${r.boss}</td>
+          <td>${r.status}</td>
+          <td>${formatDate(r.deathTime)}</td>
+          <td>${formatDate(r.respawn)}</td>
+        </tr>`).join("");
 
-      if (upcoming.length > 0) {
-        const soonest = upcoming[0];
+      document.querySelector("#fixed tbody").innerHTML = fixedUpcoming.map(r => `
+        <tr class='${r.highlight || ''}'>
+          <td>${r.boss}</td>
+          <td>${r.status}</td>
+          <td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td>
+        </tr>`).join("");
+
+      if (upcoming.length > 0 || fixedUpcoming.length > 0) {
+        const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
         const diffMs = soonest.respawn - now;
         const diffH = Math.floor(diffMs / (1000*60*60));
         const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
-        document.getElementById("nextRespawn").textContent =
-          `${soonest.boss} respawns in ${diffH}h ${diffM}m`;
+
+        function updateCountdown() {
+          const nowUpdate = new Date();
+          const diff = soonest.respawn - nowUpdate;
+          const h = Math.floor(diff / (1000*60*60));
+          const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+          const s = Math.floor((diff % (1000*60)) / 1000);
+          document.getElementById("nextRespawn").textContent =
+            `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDate(soonest.respawn)}`;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
       } else {
         document.getElementById("nextRespawn").textContent = "All bosses are alive!";
       }
