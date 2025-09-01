@@ -104,12 +104,8 @@
     };
 
     function formatDate(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      const h = String(date.getHours()).padStart(2, '0');
-      const min = String(date.getMinutes()).padStart(2, '0');
-      return `${y}-${m}-${d} ${h}:${min}`;
+      const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+      return date.toLocaleString('en-US', options);
     }
 
     function relativeBadge(date, now) {
@@ -122,10 +118,12 @@
     async function fetchData() {
       const res = await fetch(sheetURL);
       const data = await res.json();
-      render(data);
+      window.bossData = data; // store globally for live updates
+      render();
     }
 
-    function render(data) {
+    function render() {
+      const data = window.bossData || [];
       const now = new Date();
       let upcoming = [];
       let alive = [];
@@ -203,18 +201,14 @@
 
       if (upcoming.length > 0 || fixedUpcoming.length > 0) {
         const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
-        const diffMs = soonest.respawn - now;
-        const diffH = Math.floor(diffMs / (1000*60*60));
-        const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
 
         function updateCountdown() {
           const nowUpdate = new Date();
           const diff = soonest.respawn - nowUpdate;
           const h = Math.floor(diff / (1000*60*60));
           const m = Math.floor((diff % (1000*60*60)) / (1000*60));
-          const s = Math.floor((diff % (1000*60)) / 1000);
           document.getElementById("nextRespawn").textContent =
-            `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDate(soonest.respawn)}`;
+            `${soonest.boss} respawns in ${h}h ${m}m at ${formatDate(soonest.respawn)}`;
         }
 
         updateCountdown();
@@ -225,7 +219,8 @@
     }
 
     fetchData();
-    setInterval(fetchData, 60000);
+    setInterval(render, 1000); // live update tables every second
+    setInterval(fetchData, 60000); // refresh data from sheet every 60s
   </script>
 </body>
 </html>
