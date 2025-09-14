@@ -150,7 +150,7 @@
     <button id="themeToggle">🌙</button>
   </header>
 
-  <h3>Dynamic Respawns</h3>
+  <h3 id="dynamicHeader">Dynamic Respawns</h3>
   <table id="upcoming">
     <thead>
       <tr>
@@ -162,7 +162,7 @@
     <tbody></tbody>
   </table>
 
-  <h3>Fixed Schedule Respawns</h3>
+  <h3 id="fixedHeader">Fixed Schedule Respawns</h3>
   <table id="fixed">
     <thead>
       <tr>
@@ -174,7 +174,7 @@
     <tbody></tbody>
   </table>
 
-  <h3>Alive</h3>
+  <h3 id="aliveHeader">Alive</h3>
   <table id="alive">
     <thead>
       <tr>
@@ -191,51 +191,21 @@
     const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
     const respawnTimes = {
-      "Venatus": 10,
-      "Viorent": 10,
-      "Araneo": 24,
-      "Undomiel": 24,
-      "Lady Dalia": 18,
-      "Amentis": 29,
-      "Ego": 21,
-      "Livera": 24,
-      "General Aquleus": 29,
-      "Baron Braudmore": 32,
-      "Wannitas": 48,
-      "Metus": 48,
-      "Duplican": 48,
-      "Shuliar": 35,
-      "Gareth": 32,
-      "Titore": 37,
-      "Larba": 35
+      "Venatus": 10, "Viorent": 10, "Araneo": 24, "Undomiel": 24,
+      "Lady Dalia": 18, "Amentis": 29, "Ego": 21, "Livera": 24,
+      "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
+      "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
+      "Titore": 37, "Larba": 35
     };
 
     const fixedSchedules = {
-      "Clemantis": [
-        { day: 1, hour: 11, minute: 30 },
-        { day: 4, hour: 19, minute: 0 }
-      ],
-      "Saphirus": [
-        { day: 2, hour: 11, minute: 30 },
-        { day: 0, hour: 17, minute: 0 }
-      ],
-      "Neutro": [
-        { day: 2, hour: 19, minute: 0 },
-        { day: 4, hour: 11, minute: 30 }
-      ],
-      "Milavy": [
-        { day: 6, hour: 15, minute: 0 }
-      ],
-      "Ringor": [
-        { day: 6, hour: 17, minute: 0 }
-      ],
-      "Roderick": [
-        { day: 5, hour: 19, minute: 0 }
-      ],
-      "Thymele": [
-        { day: 1, hour: 19, minute: 0 },
-        { day: 3, hour: 11, minute: 30 }
-      ]
+      "Clemantis": [ { day: 1, hour: 11, minute: 30 }, { day: 4, hour: 19, minute: 0 } ],
+      "Saphirus": [ { day: 2, hour: 11, minute: 30 }, { day: 0, hour: 17, minute: 0 } ],
+      "Neutro":   [ { day: 2, hour: 19, minute: 0 }, { day: 4, hour: 11, minute: 30 } ],
+      "Milavy":   [ { day: 6, hour: 15, minute: 0 } ],
+      "Ringor":   [ { day: 6, hour: 17, minute: 0 } ],
+      "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
+      "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ]
     };
 
     function formatDate(date) {
@@ -266,6 +236,7 @@
       let alive = [];
       let fixedUpcoming = [];
 
+      // Dynamic bosses
       data.forEach(row => {
         const boss = row.Boss.trim();
         const deathTime = new Date(row.DeathTime);
@@ -275,7 +246,6 @@
         const respawn = new Date(deathTime.getTime() + hours * 60 * 60 * 1000);
         const diffMs = respawn - now;
         const diffH = Math.floor(diffMs / (1000*60*60));
-        const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
 
         let status;
         if (diffMs > 0) {
@@ -289,20 +259,17 @@
         }
       });
 
+      // Fixed schedule bosses
       Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
         schedules.forEach(s => {
           const respawn = new Date(now);
           respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
           respawn.setHours(s.hour, s.minute, 0, 0);
-
-          if (respawn < now) {
-            respawn.setDate(respawn.getDate() + 7);
-          }
+          if (respawn < now) respawn.setDate(respawn.getDate() + 7);
 
           const diffMs = respawn - now;
           const diffH = Math.floor(diffMs / (1000*60*60));
           const diffM = Math.floor((diffMs % (1000*60*60)) / (1000*60));
-
           let status = `⏳ Respawns in ${diffH}h ${diffM}m ${relativeBadge(respawn, now)}`;
           let highlight = now.getDay() === s.day ? "highlight" : "";
           fixedUpcoming.push({ boss, status, respawn, highlight });
@@ -313,30 +280,41 @@
       fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
       document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => `
-        <tr>
-          <td>${r.boss}</td>
-          <td>${r.status}</td>
-          <td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td>
-        </tr>`).join("");
+        <tr><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td></tr>
+      `).join("");
 
       document.querySelector("#alive tbody").innerHTML = alive.map(r => `
-        <tr>
-          <td>${r.boss}</td>
-          <td>${r.status}</td>
-          <td>${formatDate(r.deathTime)}</td>
-          <td>${formatDate(r.respawn)}</td>
-        </tr>`).join("");
+        <tr><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.deathTime)}</td><td>${formatDate(r.respawn)}</td></tr>
+      `).join("");
 
       document.querySelector("#fixed tbody").innerHTML = fixedUpcoming.map(r => `
-        <tr class='${r.highlight || ''}'>
-          <td>${r.boss}</td>
-          <td>${r.status}</td>
-          <td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td>
-        </tr>`).join("");
+        <tr class='${r.highlight || ''}'><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.respawn)} ${relativeBadge(r.respawn, now)}</td></tr>
+      `).join("");
 
+      // ✅ Move Fixed section up if spawning soon
+      const fixedSpawningSoon = fixedUpcoming.some(r => {
+        const diffMs = r.respawn - now;
+        const diffH = diffMs / (1000*60*60);
+        return diffH <= 6;
+      });
+
+      const fixedHeader = document.getElementById("fixedHeader");
+      const fixedTable = document.getElementById("fixed");
+      const dynamicHeader = document.getElementById("dynamicHeader");
+      const aliveHeader = document.getElementById("aliveHeader");
+      const aliveTable = document.getElementById("alive");
+
+      if (fixedSpawningSoon) {
+        dynamicHeader.before(fixedHeader);
+        dynamicHeader.before(fixedTable);
+      } else {
+        aliveHeader.after(fixedHeader);
+        aliveHeader.after(fixedTable);
+      }
+
+      // Countdown for next respawn
       if (upcoming.length > 0 || fixedUpcoming.length > 0) {
         const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
-
         function updateCountdown() {
           const nowUpdate = new Date();
           const diff = soonest.respawn - nowUpdate;
@@ -345,7 +323,6 @@
           document.getElementById("nextRespawn").textContent =
             `${soonest.boss} respawns in ${h}h ${m}m at ${formatDate(soonest.respawn)}`;
         }
-
         if (countdownInterval) clearInterval(countdownInterval);
         updateCountdown();
         countdownInterval = setInterval(updateCountdown, 1000);
@@ -369,7 +346,6 @@
       themeToggleBtn.textContent = theme === "dark" ? "🌙" : "☀️";
     }
 
-    // Load saved theme or default to dark
     const savedTheme = localStorage.getItem("theme") || "dark";
     setTheme(savedTheme);
 
