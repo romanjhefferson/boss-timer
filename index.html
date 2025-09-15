@@ -9,10 +9,10 @@
       font-family: Arial, sans-serif; 
       margin: 0; 
       padding: 0; 
-      transition: background 0.3s, color 0.3s; /* smooth theme toggle */
+      transition: background 0.3s, color 0.3s; 
     }
 
-    /* Header (Top Bar) */
+    /* Header */
     header { 
       display: flex; 
       justify-content: center; 
@@ -23,10 +23,8 @@
       z-index: 10; 
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
-
     #respawnBanner { flex: 1; text-align: center; }
-    #nextRespawn { font-weight: bold; font-size: 1.2rem; }
-
+    #nextRespawn { font-weight: bold; font-size: 1.2rem; transition: color 0.3s, text-shadow 0.3s; }
     #themeToggle { 
       position: absolute; 
       right: 1rem; 
@@ -59,41 +57,76 @@
       z-index: 5; 
     }
 
-    .badge { border-radius: 12px; padding: 2px 8px; font-size: 0.8rem; margin-left: 5px; }
-    .soon-badge { background: #ffcc66; color: #222; font-weight: bold; }
+    .badge { border-radius: 12px; padding: 2px 8px; font-size: 0.8rem; margin-left: 5px; font-weight: bold; }
 
     /* Row color-coding */
     .row-alive { background: rgba(119, 221, 119, 0.2); }
-    .row-soon { background: rgba(255, 204, 102, 0.2); }
-    .row-verysoon { background: rgba(255, 107, 107, 0.2); }
+    .row-soon { }
+    .row-verysoon { }
 
     /* Highlight Today Section */
-    .highlight-today { border: 2px solid #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
+    .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
 
     /* Separator Banner */
     .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
 
-    /* Dark */
+    /* Dark Theme */
     body.dark { background: #2c2c2c; color: #e0e0e0; }
     body.dark header { background: #111; color: white; }
     body.dark table { background: #3a3a3a; }
     body.dark th { background: #444; color: #f0f0f0; }
     body.dark td { border-bottom: 1px solid #555; }
     body.dark .badge { background: #555; color: #f0f0f0; }
-    body.dark .soon-badge { background: #ffcc66; color: #222; }
-    body.dark .highlight-today { background: #554422; }
+    body.dark .highlight-today { border-color: #b366ff; box-shadow: 0 0 10px rgba(179,102,255,0.7); }
     body.dark .separator { border-color: #777; color: #ddd; }
 
-    /* Light */
+    /* Dark mode row + status + countdown colors */
+    body.dark .row-soon { background: rgba(102,255,204,0.15); }
+    body.dark .row-verysoon { background: rgba(255,102,204,0.15); }
+    body.dark td.status-soon, 
+    body.dark td.countdown-soon { color: #66ffcc; font-weight: bold; }
+    body.dark td.status-verysoon, 
+    body.dark td.countdown-verysoon { color: #ff66cc; font-weight: bold; }
+    body.dark td.status-today, 
+    body.dark td.countdown-today { color: #b366ff; font-weight: bold; }
+
+    /* Light Theme */
     body.light { background: #f5f5f5; color: #222; }
     body.light header { background: #fff; color: #222; }
     body.light table { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     body.light th { background: #f0f0f0; color: #222; }
     body.light td { border-bottom: 1px solid #ddd; }
     body.light .badge { background: #eee; color: #222; }
-    body.light .soon-badge { background: #ffcc66; color: #222; }
-    body.light .highlight-today { background: #fff4cc; }
+    body.light .highlight-today { border-color: #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
     body.light .separator { border-color: #bbb; color: #333; }
+
+    /* Light mode row + status + countdown colors */
+    body.light .row-soon { background: rgba(255,204,102,0.2); }
+    body.light .row-verysoon { background: rgba(255,107,107,0.2); }
+    body.light td.status-soon, 
+    body.light td.countdown-soon { color: goldenrod; font-weight: bold; }
+    body.light td.status-verysoon, 
+    body.light td.countdown-verysoon { color: red; font-weight: bold; }
+    body.light td.status-today, 
+    body.light td.countdown-today { color: orange; font-weight: bold; }
+
+    /* Banner urgency colors */
+    body.light #nextRespawn.soon { color: goldenrod; }
+    body.light #nextRespawn.verysoon { color: red; }
+    body.light #nextRespawn.today { color: orange; }
+    body.dark #nextRespawn.soon { color: #66ffcc; }
+    body.dark #nextRespawn.verysoon { color: #ff66cc; }
+    body.dark #nextRespawn.today { color: #b366ff; }
+
+    /* Glow effect for Very Soon */
+    #nextRespawn.verysoon {
+      animation: glowPulse 1.5s infinite alternate;
+      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    }
+    @keyframes glowPulse {
+      from { text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
+      to { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+    }
   </style>
 </head>
 <body>
@@ -186,12 +219,22 @@
         const diffMs = respawn - now;
         const diffH = diffMs / (1000*60*60);
 
-        let status, rowClass;
+        let status, rowClass, statusClass = "", countdownClass = "";
         if (diffMs > 0) {
-          if (diffH < 1) { status = `🔴 Very Soon`; rowClass = "row-verysoon"; }
-          else if (diffH < 6) { status = `🟡 Soon`; rowClass = "row-soon"; }
+          if (diffH < 1) { 
+            status = `🔴 Very Soon`; 
+            rowClass = "row-verysoon"; 
+            statusClass = "status-verysoon"; 
+            countdownClass = "countdown-verysoon"; 
+          }
+          else if (diffH < 6) { 
+            status = `🟡 Soon`; 
+            rowClass = "row-soon"; 
+            statusClass = "status-soon"; 
+            countdownClass = "countdown-soon"; 
+          }
           else { status = "⏳ Upcoming"; rowClass = ""; }
-          upcoming.push({ boss, status, respawn, rowClass });
+          upcoming.push({ boss, status, statusClass, countdownClass, respawn, rowClass });
         } else {
           status = `🟢 Alive`;
           rowClass = "row-alive";
@@ -209,8 +252,13 @@
 
           const soon = respawn.toDateString() === now.toDateString();
           let status = `⏳ Scheduled`;
-          if (soon) status += ` <span class="soon-badge">⚡ Today</span>`;
-          fixedUpcoming.push({ boss, status, respawn, soon });
+          let statusClass = "", countdownClass = "";
+          if (soon) { 
+            status += ` ⚡ Today`; 
+            statusClass = "status-today"; 
+            countdownClass = "countdown-today"; 
+          }
+          fixedUpcoming.push({ boss, status, statusClass, countdownClass, respawn, soon });
         });
       });
 
@@ -221,7 +269,7 @@
       let fixedLater = fixedUpcoming.filter(r => !r.soon);
 
       document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r =>
-        `<tr class="${r.rowClass}"><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+        `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
       ).join("");
 
       document.querySelector("#alive tbody").innerHTML = alive.map(r =>
@@ -229,18 +277,18 @@
       ).join("");
 
       document.querySelector("#fixedSoon tbody").innerHTML = fixedSoon.map(r =>
-        `<tr><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+        `<tr><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
       ).join("");
 
       document.querySelector("#fixed tbody").innerHTML = fixedLater.map(r =>
-        `<tr><td>${r.boss}</td><td>${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+        `<tr><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDate(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
       ).join("");
 
       document.getElementById("fixedSoonHeader").style.display = fixedSoon.length ? "block" : "none";
       document.getElementById("fixedSoon").style.display = fixedSoon.length ? "table" : "none";
       document.getElementById("separator").style.display = fixedLater.length ? "block" : "none";
 
-      // Countdown updates
+      // Countdown + banner updates
       if (upcoming.length > 0 || fixedUpcoming.length > 0) {
         const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
         function updateCountdowns() {
@@ -249,9 +297,13 @@
           const h = Math.floor(diff / (1000*60*60));
           const m = Math.floor((diff % (1000*60*60)) / (1000*60));
           const s = Math.floor((diff % (1000*60)) / 1000);
-          document.getElementById("nextRespawn").textContent =
-            `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDate(soonest.respawn)}`;
 
+          // Update banner text
+          const banner = document.getElementById("nextRespawn");
+          banner.textContent = `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDate(soonest.respawn)}`;
+          banner.className = soonest.statusClass.replace("status",""); // apply urgency color
+
+          // Update countdown cells
           document.querySelectorAll(".countdown").forEach(td => {
             const time = new Date(td.dataset.time);
             td.textContent = formatCountdown(time);
