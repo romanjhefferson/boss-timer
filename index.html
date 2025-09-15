@@ -6,10 +6,29 @@
   <title>Lordnine Boss Monitoring</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { padding: 1rem; position: sticky; top: 0; z-index: 10; }
+    header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: flex-start; 
+      padding: 1rem; 
+      position: sticky; 
+      top: 0; 
+      z-index: 10; 
+    }
+
+    #respawnBanner { flex: 1; }
     #nextRespawn { font-weight: bold; font-size: 1.2rem; display: block; margin-bottom: 0.5rem; }
 
-    button#themeToggle { float: right; background: none; border: 1px solid; border-radius: 6px; padding: 0.3rem 0.8rem; cursor: pointer; font-size: 1.2rem; }
+    #themeToggle { 
+      background: none; 
+      border: 1px solid; 
+      border-radius: 6px; 
+      padding: 0.3rem 0.8rem; 
+      cursor: pointer; 
+      font-size: 1.2rem; 
+      margin-left: 1rem; 
+      margin-top: 0.5rem;   /* moves button slightly down */
+    }
 
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
@@ -55,7 +74,9 @@
 </head>
 <body>
   <header>
-    <span id="nextRespawn">Loading...</span>
+    <div id="respawnBanner">
+      <span id="nextRespawn">Loading...</span>
+    </div>
     <button id="themeToggle">🌙</button>
   </header>
 
