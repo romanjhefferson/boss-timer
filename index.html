@@ -112,7 +112,7 @@
       "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
       "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
       "Titore": 37, "Larba": 35,
-      "Secreta": 62, "Ordo": 62, "Asta": 62  // ✅ added
+      "Secreta": 62, "Ordo": 62, "Asta": 62
     };
 
     const fixedSchedules = {
@@ -123,7 +123,7 @@
       "Ringor":   [ { day: 6, hour: 17, minute: 0 } ],
       "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
       "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ],
-      "Auraq":    [ { day: 0, hour: 21, minute: 0 }, { day: 3, hour: 21, minute: 0 } ] // ✅ added
+      "Auraq":    [ { day: 0, hour: 21, minute: 0 }, { day: 3, hour: 21, minute: 0 } ]
     };
 
     function formatDate(date) {
@@ -279,4 +279,4 @@
     }
     setTheme(localStorage.getItem("theme") || "dark");
     themeToggleBtn.addEventListener("click", () => {
-      setTheme(document.body.classList.contains("dark") ?
+      setTheme(document.body.classList
