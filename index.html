@@ -64,12 +64,6 @@
       from { text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
       to { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
     }
-
-    /* Special highlight for Auraq */
-    .auraq-highlight {
-      border: 2px solid gold !important;
-      box-shadow: 0 0 12px gold !important;
-    }
   </style>
 </head>
 <body>
@@ -112,7 +106,10 @@
       "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
       "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
       "Titore": 37, "Larba": 35,
-      "Secreta": 62, "Ordo": 62, "Asta": 62
+      // Added new bosses
+      "Secreta": 62,
+      "Ordo": 62,
+      "Asta": 62
     };
 
     const fixedSchedules = {
@@ -123,6 +120,7 @@
       "Ringor":   [ { day: 6, hour: 17, minute: 0 } ],
       "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
       "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ],
+      // Added Auraq (Sunday=0, Wednesday=3)
       "Auraq":    [ { day: 0, hour: 21, minute: 0 }, { day: 3, hour: 21, minute: 0 } ]
     };
 
@@ -201,20 +199,9 @@
 
           const soon = respawn.toDateString() === now.toDateString();
           let status = `⏳ Scheduled`;
-          let statusClass = "", countdownClass = "", rowClass = "";
-
-          if (soon) {
-            status += ` ⚡ Today`;
-            statusClass = "status-today";
-            countdownClass = "countdown-today";
-
-            // ⭐ Highlight Auraq specially
-            if (boss === "Auraq") {
-              status += " ⭐";
-              rowClass = "auraq-highlight";
-            }
-          }
-          fixedUpcoming.push({ boss, status, statusClass, countdownClass, respawn, soon, rowClass });
+          let statusClass = "", countdownClass = "";
+          if (soon) { status += ` ⚡ Today`; statusClass = "status-today"; countdownClass = "countdown-today"; }
+          fixedUpcoming.push({ boss, status, statusClass, countdownClass, respawn, soon });
         });
       });
 
@@ -233,7 +220,7 @@
       ).join("");
 
       document.querySelector("#fixedSoon tbody").innerHTML = fixedSoon.map(r =>
-        `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+        `<tr><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
       ).join("");
 
       document.querySelector("#fixed tbody").innerHTML = fixedLater.map(r =>
@@ -279,4 +266,8 @@
     }
     setTheme(localStorage.getItem("theme") || "dark");
     themeToggleBtn.addEventListener("click", () => {
-      setTheme(document.body.classList
+      setTheme(document.body.classList.contains("dark") ? "light" : "dark");
+    });
+  </script>
+</body>
+</html>
