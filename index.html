@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lordnine Boss Monitoring</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lordnine Boss Monitoring</title>
+<style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
     header { display: flex; justify-content: center; align-items: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     #respawnBanner { flex: 1; text-align: center; }
@@ -67,38 +68,33 @@
   </style>
 </head>
 <body>
-  <header>
-    <div id="respawnBanner">
-      <span id="nextRespawn">Loading...</span>
-    </div>
-    <button id="themeToggle">🌙</button>
-  </header>
-
-  <h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
-  <table id="fixedSoon" class="highlight-today" style="display:none;">
-    <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-    <tbody></tbody>
-  </table>
-
-  <h3 id="dynamicHeader">Dynamic Respawns</h3>
-  <table id="upcoming">
-    <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-    <tbody></tbody>
-  </table>
-
-  <h3 id="aliveHeader">Alive</h3>
-  <table id="alive">
-    <thead><tr><th>Boss</th><th>Status</th><th>Death Time</th><th>Respawn Time</th></tr></thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="separator" class="separator" style="display:none;">──── Other Fixed Respawns ────</div>
-  <table id="fixed">
-    <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-    <tbody></tbody>
-  </table>
-
-  <script>
+<header>
+<div id="respawnBanner">
+<span id="nextRespawn">Loading...</span>
+</div>
+<button id="themeToggle">🌙</button>
+</header>
+<h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
+<table class="highlight-today" id="fixedSoon" style="display:none;">
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
+</table>
+<h3 id="dynamicHeader">Dynamic Respawns</h3>
+<table id="upcoming">
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
+</table>
+<h3 id="aliveHeader">Alive</h3>
+<table id="alive">
+<thead><tr><th>Boss</th><th>Status</th><th>Death Time</th><th>Respawn Time</th></tr></thead>
+<tbody></tbody>
+</table>
+<div class="separator" id="separator" style="display:none;">──── Other Fixed Respawns ────</div>
+<table id="fixed">
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
+</table>
+<script>
     const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
     const respawnTimes = { 
       "Venatus": 10, "Viorent": 10, "Araneo": 24, "Undomiel": 24,
@@ -123,7 +119,8 @@
       "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
       "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ],
       "Auraq":    [ { day: 0, hour: 21, minute: 0 }, { day: 3, hour: 21, minute: 0 } ],
-      "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ]
+      "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ],
+  "Benji": [ { day: 0, hour: 21, minute: 0 } ]
     };
 
     function formatDate(date) {
