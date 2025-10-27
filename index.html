@@ -1,292 +1,272 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Lordnine Boss Monitoring</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --accent: #00d4ff;
-    --soon-color: #ffd166;
-    --verysoon-color: #ff5c5c;
-    --today-color: #b366ff;
-  }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
+    header { display: flex; justify-content: center; align-items: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    #respawnBanner { flex: 1; text-align: center; }
+    #nextRespawn { font-weight: bold; font-size: 1.2rem; transition: color 0.3s, text-shadow 0.3s; }
+    #themeToggle { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: 1px solid; border-radius: 6px; padding: 0.3rem 0.8rem; cursor: pointer; font-size: 1.2rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
+    tr:last-child td { border-bottom: none; }
+    h3 { margin-top: 2rem; margin-left: 1rem; }
+    th { position: sticky; top: 0; z-index: 5; }
+    .row-alive { background: rgba(119, 221, 119, 0.2); }
+    .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
+    .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    transition: background 0.3s, color 0.3s;
-  }
+    /* Dark Theme */
+    body.dark { background: #2c2c2c; color: #e0e0e0; }
+    body.dark header { background: #111; color: white; }
+    body.dark table { background: #3a3a3a; }
+    body.dark th { background: #444; color: #f0f0f0; }
+    body.dark td { border-bottom: 1px solid #555; }
+    body.dark .highlight-today { border-color: #b366ff; box-shadow: 0 0 10px rgba(179,102,255,0.7); }
+    body.dark .separator { border-color: #777; color: #ddd; }
+    body.dark .row-soon { background: rgba(102,255,204,0.15); }
+    body.dark .row-verysoon { background: rgba(255,102,204,0.15); }
+    body.dark td.status-soon, body.dark td.countdown-soon { color: #66ffcc; font-weight: bold; }
+    body.dark td.status-verysoon, body.dark td.countdown-verysoon { color: #ff66cc; font-weight: bold; }
+    body.dark td.status-today, body.dark td.countdown-today { color: #b366ff; font-weight: bold; }
 
-  header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.8rem 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
+    /* Light Theme */
+    body.light { background: #f5f5f5; color: #222; }
+    body.light header { background: #fff; color: #222; }
+    body.light table { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    body.light th { background: #f0f0f0; color: #222; }
+    body.light td { border-bottom: 1px solid #ddd; }
+    body.light .highlight-today { border-color: #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
+    body.light .separator { border-color: #bbb; color: #333; }
+    body.light .row-soon { background: rgba(255,204,102,0.2); }
+    body.light .row-verysoon { background: rgba(255,107,107,0.2); }
+    body.light td.status-soon, body.light td.countdown-soon { color: goldenrod; font-weight: bold; }
+    body.light td.status-verysoon, body.light td.countdown-verysoon { color: red; font-weight: bold; }
+    body.light td.status-today, body.light td.countdown-today { color: orange; font-weight: bold; }
 
-  #respawnBanner {
-    flex: 1;
-    text-align: center;
-    background: rgba(255,255,255,0.05);
-    border-radius: 10px;
-    padding: 0.4rem 0.8rem;
-  }
+    /* Banner urgency colors */
+    body.light #nextRespawn.soon { color: goldenrod; }
+    body.light #nextRespawn.verysoon { color: red; }
+    body.light #nextRespawn.today { color: orange; }
+    body.dark #nextRespawn.soon { color: #66ffcc; }
+    body.dark #nextRespawn.verysoon { color: #ff66cc; }
+    body.dark #nextRespawn.today { color: #b366ff; }
 
-  #nextRespawn {
-    font-weight: 600;
-    font-size: 1.2rem;
-    transition: color 0.3s;
-  }
-
-  #themeToggle {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    border-radius: 8px;
-    padding: 0.3rem 0.8rem;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: all 0.3s;
-  }
-  #themeToggle:hover { background: var(--accent); color: #000; }
-
-  h3 {
-    margin-top: 2rem;
-    margin-left: 1rem;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
-
-  th, td {
-    padding: 0.9rem 1rem;
-    text-align: left;
-    font-size: 0.95rem;
-    vertical-align: middle;
-  }
-
-  td.countdown { text-align: center; }
-
-  tr:hover { background: rgba(255,255,255,0.05); transition: 0.2s; }
-  body.light tr:hover { background: rgba(0,212,255,0.08); }
-
-  .separator {
-    text-align: center;
-    font-weight: 600;
-    letter-spacing: 1px;
-    margin: 2rem 0 1rem;
-    padding: 0.5rem;
-    border-top: 2px solid var(--accent);
-    border-bottom: 2px solid var(--accent);
-    color: var(--accent);
-    opacity: 0.8;
-  }
-
-  /* Themes */
-  body.dark { background: #1b1b1b; color: #e0e0e0; }
-  body.dark header { background: rgba(25,25,25,0.9); color: white; }
-  body.dark table { background: #262626; }
-  body.dark th { background: #333; color: #00d4ff; }
-  body.dark td { border-bottom: 1px solid #444; }
-
-  body.light { background: #f5f9fb; color: #222; }
-  body.light header { background: rgba(255,255,255,0.9); color: #000; }
-  body.light table { background: #ffffff; }
-  body.light th { background: #eaf8fa; color: #005f70; }
-  body.light td { border-bottom: 1px solid #ddd; }
-
-  .row-alive { background: rgba(0,212,255,0.08); }
-  .row-soon { background: rgba(255,209,102,0.15); }
-  .row-verysoon { background: rgba(255,92,92,0.15); }
-
-  td.status-soon, td.countdown-soon { color: var(--soon-color); font-weight: 600; }
-  td.status-verysoon, td.countdown-verysoon { color: var(--verysoon-color); font-weight: 600; }
-  td.status-today, td.countdown-today { color: var(--today-color); font-weight: 600; }
-
-  .highlight-today { border: 2px solid var(--accent); box-shadow: 0 0 10px rgba(0,212,255,0.3); }
-</style>
+    /* Glow effect for Very Soon */
+    #nextRespawn.verysoon {
+      animation: glowPulse 1.5s infinite alternate;
+      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    }
+    @keyframes glowPulse {
+      from { text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
+      to { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
+    }
+  </style>
 </head>
 <body>
 <header>
-  <div id="respawnBanner"><span id="nextRespawn">Loading...</span></div>
-  <button id="themeToggle">🌙</button>
+<div id="respawnBanner">
+<span id="nextRespawn">Loading...</span>
+</div>
+<button id="themeToggle">🌙</button>
 </header>
-
 <h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
 <table class="highlight-today" id="fixedSoon" style="display:none;">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
 </table>
-
-<h3 id="dynamicHeader">🔁 Dynamic Respawns</h3>
+<h3 id="dynamicHeader">Dynamic Respawns</h3>
 <table id="upcoming">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
 </table>
-
-<h3 id="aliveHeader">✅ Alive</h3>
+<h3 id="aliveHeader">Alive</h3>
 <table id="alive">
-  <thead><tr><th>Boss</th><th>Status</th><th>Death Time</th><th>Respawn Time</th></tr></thead>
-  <tbody></tbody>
+<thead><tr><th>Boss</th><th>Status</th><th>Death Time</th><th>Respawn Time</th></tr></thead>
+<tbody></tbody>
 </table>
-
 <div class="separator" id="separator" style="display:none;">──── Other Fixed Respawns ────</div>
 <table id="fixed">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody></tbody>
 </table>
-
 <script>
-const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
-const respawnTimes = {
-  "Venatus": 10, "Viorent": 10, "Araneo": 24, "Undomiel": 24,
-  "Lady Dalia": 18, "Amentis": 29, "Ego": 21, "Livera": 24,
-  "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
-  "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
-  "Titore": 37, "Larba": 35, "Catena": 35, "Secreta": 62,
-  "Ordo": 62, "Asta": 62, "Supore": 62
-};
+    const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+    const respawnTimes = { 
+      "Venatus": 10, "Viorent": 10, "Araneo": 24, "Undomiel": 24,
+      "Lady Dalia": 18, "Amentis": 29, "Ego": 21, "Livera": 24,
+      "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
+      "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
+      "Titore": 37, "Larba": 35,
+      "Catena": 35,   // ⬅️ Added here
+      // Added new bosses
+      "Secreta": 62,
+      "Ordo": 62,
+      "Asta": 62,
+      "Supore": 62
+    };
 
-const fixedSchedules = {
-  "Clemantis": [ { day: 1, hour: 11, minute: 30 }, { day: 4, hour: 19, minute: 0 } ],
-  "Saphirus": [ { day: 2, hour: 11, minute: 30 }, { day: 0, hour: 17, minute: 0 } ],
-  "Neutro":   [ { day: 2, hour: 19, minute: 0 }, { day: 4, hour: 11, minute: 30 } ],
-  "Milavy":   [ { day: 6, hour: 15, minute: 0 } ],
-  "Ringor":   [ { day: 6, hour: 17, minute: 0 } ],
-  "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
-  "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ],
-  "Auraq":    [ { day: 3, hour: 21, minute: 0 }, { day: 5, hour: 22, minute: 0 } ],
-  "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ],
+    const fixedSchedules = {
+      "Clemantis": [ { day: 1, hour: 11, minute: 30 }, { day: 4, hour: 19, minute: 0 } ],
+      "Saphirus": [ { day: 2, hour: 11, minute: 30 }, { day: 0, hour: 17, minute: 0 } ],
+      "Neutro":   [ { day: 2, hour: 19, minute: 0 }, { day: 4, hour: 11, minute: 30 } ],
+      "Milavy":   [ { day: 6, hour: 15, minute: 0 } ],
+      "Ringor":   [ { day: 6, hour: 17, minute: 0 } ],
+      "Roderick": [ { day: 5, hour: 19, minute: 0 } ],
+      "Thymele":  [ { day: 1, hour: 19, minute: 0 }, { day: 3, hour: 11, minute: 30 } ],
+      "Auraq":    [ { day: 3, hour: 21, minute: 0 }, { day: 5, hour: 22, minute: 0 } ],
+      "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ],
   "Benji": [ { day: 0, hour: 21, minute: 0 } ]
-};
+    };
 
-function formatDate(date) {
-  const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
-  return date.toLocaleString('en-US', options);
-}
-function formatDateWithWeekday(date) {
-  const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
-  return `${formatDate(date)} (${weekday})`;
-}
-function formatCountdown(target) {
-  const now = new Date();
-  const diff = target - now;
-  if (diff <= 0) return "Now!";
-  const h = Math.floor(diff / (1000*60*60));
-  const m = Math.floor((diff % (1000*60*60)) / (1000*60));
-  const s = Math.floor((diff % (1000*60)) / 1000);
-  return `${h}h ${m}m ${s}s`;
-}
-
-async function fetchData() {
-  const res = await fetch(sheetURL);
-  const data = await res.json();
-  window.bossData = data;
-  render();
-}
-
-let countdownInterval;
-
-function render() {
-  const data = window.bossData || [];
-  const now = new Date();
-  let upcoming = [], alive = [], fixedUpcoming = [];
-
-  data.forEach(row => {
-    const boss = row.Boss.trim();
-    const deathTime = new Date(row.DeathTime);
-    const hours = respawnTimes[boss];
-    if (!hours || isNaN(deathTime)) return;
-
-    const respawn = new Date(deathTime.getTime() + hours * 60 * 60 * 1000);
-    const diffH = (respawn - now) / (1000*60*60);
-
-    let status, rowClass, statusClass = "", countdownClass = "";
-    if (respawn > now) {
-      if (diffH < 1) { status = `🔴 Very Soon`; rowClass = "row-verysoon"; statusClass = "status-verysoon"; countdownClass = "countdown-verysoon"; }
-      else if (diffH < 6) { status = `🟡 Soon`; rowClass = "row-soon"; statusClass = "status-soon"; countdownClass = "countdown-soon"; }
-      else { status = "⏳ Upcoming"; rowClass = ""; }
-      upcoming.push({ boss, status, statusClass, countdownClass, respawn, rowClass });
-    } else {
-      alive.push({ boss, status: `🟢 Alive`, deathTime, respawn, rowClass: "row-alive" });
+    function formatDate(date) {
+      const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+      return date.toLocaleString('en-US', options);
     }
-  });
-
-  Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
-    schedules.forEach(s => {
-      const respawn = new Date(now);
-      respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
-      respawn.setHours(s.hour, s.minute, 0, 0);
-      if (respawn < now) respawn.setDate(respawn.getDate() + 7);
-
-      const diffH = (respawn - now) / (1000*60*60);
-      let status = `⏳ Scheduled`, statusClass = "", countdownClass = "", rowClass = "";
-      if (diffH < 1) { status = `🔴 Very Soon`; rowClass = "row-verysoon"; statusClass = "status-verysoon"; countdownClass = "countdown-verysoon"; }
-      else if (diffH < 6) { status = `🟡 Soon`; rowClass = "row-soon"; statusClass = "status-soon"; countdownClass = "countdown-soon"; }
-      else if (respawn.toDateString() === now.toDateString()) { status += ` ⚡ Today`; statusClass = "status-today"; countdownClass = "countdown-today"; }
-      fixedUpcoming.push({ boss, status, statusClass, countdownClass, respawn, rowClass });
-    });
-  });
-
-  upcoming.sort((a,b) => a.respawn - b.respawn);
-  fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
-
-  const fixedSoon = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
-  const fixedLater = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
-
-  document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r =>
-    `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`).join("");
-
-  document.querySelector("#alive tbody").innerHTML = alive.map(r =>
-    `<tr class="${r.rowClass}"><td>${r.boss}</td><td>${r.status}</td><td>${formatDateWithWeekday(r.deathTime)}</td><td>${formatDateWithWeekday(r.respawn)}</td></tr>`).join("");
-
-  document.querySelector("#fixedSoon tbody").innerHTML = fixedSoon.map(r =>
-    `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`).join("");
-
-  document.querySelector("#fixed tbody").innerHTML = fixedLater.map(r =>
-    `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`).join("");
-
-  document.getElementById("fixedSoonHeader").style.display = fixedSoon.length ? "block" : "none";
-  document.getElementById("fixedSoon").style.display = fixedSoon.length ? "table" : "none";
-  document.getElementById("separator").style.display = fixedLater.length ? "block" : "none";
-
-  const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
-  if (soonest) {
-    function updateCountdowns() {
-      const nowU = new Date();
-      const diff = soonest.respawn - nowU;
+    function formatDateWithWeekday(date) {
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      return `${formatDate(date)} (${weekday})`;
+    }
+    function formatCountdown(target) {
+      const now = new Date();
+      const diff = target - now;
+      if (diff <= 0) return "Now!";
       const h = Math.floor(diff / (1000*60*60));
       const m = Math.floor((diff % (1000*60*60)) / (1000*60));
       const s = Math.floor((diff % (1000*60)) / 1000);
-      const banner = document.getElementById("nextRespawn");
-      banner.textContent = `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDateWithWeekday(soonest.respawn)}`;
-      banner.className = soonest.statusClass.replace("status","");
-      document.querySelectorAll(".countdown").forEach(td => {
-        const time = new Date(td.dataset.time);
-        td.textContent = formatCountdown(time);
-      });
+
+      const today = now.toDateString();
+      const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+      const targetDay = target.toDateString();
+
+      if (targetDay === today) return `Today, ${h}h ${m}m ${s}s`;
+      if (targetDay === tomorrow.toDateString()) return `Tomorrow, ${h}h ${m}m ${s}s`;
+      return `${h}h ${m}m ${s}s`;
     }
-    if (countdownInterval) clearInterval(countdownInterval);
-    updateCountdowns();
-    countdownInterval = setInterval(updateCountdowns, 1000);
-  }
+
+    async function fetchData() {
+      const res = await fetch(sheetURL);
+      const data = await res.json();
+      window.bossData = data;
+      render();
+    }
+
+    let countdownInterval;
+
+    function render() {
+      const data = window.bossData || [];
+      const now = new Date();
+      let upcoming = [];
+      let alive = [];
+      let fixedUpcoming = [];
+
+      // Dynamic bosses
+      data.forEach(row => {
+        const boss = row.Boss.trim();
+        const deathTime = new Date(row.DeathTime);
+        const hours = respawnTimes[boss];
+        if (!hours || isNaN(deathTime)) return;
+
+        const respawn = new Date(deathTime.getTime() + hours * 60 * 60 * 1000);
+        const diffMs = respawn - now;
+        const diffH = diffMs / (1000*60*60);
+
+        let status, rowClass, statusClass = "", countdownClass = "";
+        if (diffMs > 0) {
+          if (diffH < 1) { status = `🔴 Very Soon`; rowClass = "row-verysoon"; statusClass = "status-verysoon"; countdownClass = "countdown-verysoon"; }
+          else if (diffH < 6) { status = `🟡 Soon`; rowClass = "row-soon"; statusClass = "status-soon"; countdownClass = "countdown-soon"; }
+          else { status = "⏳ Upcoming"; rowClass = ""; }
+          upcoming.push({ boss, status, statusClass, countdownClass, respawn, rowClass });
+        } else {
+          status = `🟢 Alive`;
+          rowClass = "row-alive";
+          alive.push({ boss, status, deathTime, respawn, rowClass });
+        }
+      });
+
+      // Fixed bosses
+      Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
+        schedules.forEach(s => {
+          const respawn = new Date(now);
+          respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
+          respawn.setHours(s.hour, s.minute, 0, 0);
+          if (respawn < now) respawn.setDate(respawn.getDate() + 7);
+
+          const soon = respawn.toDateString() === now.toDateString();
+          let status = `⏳ Scheduled`;
+          let statusClass = "", countdownClass = "";
+          if (soon) { status += ` ⚡ Today`; statusClass = "status-today"; countdownClass = "countdown-today"; }
+          fixedUpcoming.push({ boss, status, statusClass, countdownClass, respawn, soon });
+        });
+      });
+
+      upcoming.sort((a,b) => a.respawn - b.respawn);
+      fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
+
+      let fixedSoon = fixedUpcoming.filter(r => r.soon);
+      let fixedLater = fixedUpcoming.filter(r => !r.soon);
+
+      document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r =>
+        `<tr class="${r.rowClass}"><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+      ).join("");
+
+      document.querySelector("#alive tbody").innerHTML = alive.map(r =>
+        `<tr class="${r.rowClass}"><td>${r.boss}</td><td>${r.status}</td><td>${formatDateWithWeekday(r.deathTime)}</td><td>${formatDateWithWeekday(r.respawn)}</td></tr>`
+      ).join("");
+
+      document.querySelector("#fixedSoon tbody").innerHTML = fixedSoon.map(r =>
+        `<tr><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+      ).join("");
+
+      document.querySelector("#fixed tbody").innerHTML = fixedLater.map(r =>
+        `<tr><td>${r.boss}</td><td class="${r.statusClass}">${r.status}</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown ${r.countdownClass}" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
+      ).join("");
+
+      document.getElementById("fixedSoonHeader").style.display = fixedSoon.length ? "block" : "none";
+      document.getElementById("fixedSoon").style.display = fixedSoon.length ? "table" : "none";
+      document.getElementById("separator").style.display = fixedLater.length ? "block" : "none";
+
+      // Countdown + banner updates
+      if (upcoming.length > 0 || fixedUpcoming.length > 0) {
+        const soonest = [...upcoming, ...fixedUpcoming].sort((a,b) => a.respawn - b.respawn)[0];
+        function updateCountdowns() {
+          const nowUpdate = new Date();
+          const diff = soonest.respawn - nowUpdate;
+          const h = Math.floor(diff / (1000*60*60));
+          const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+          const s = Math.floor((diff % (1000*60)) / 1000);
+          const banner = document.getElementById("nextRespawn");
+          banner.textContent = `${soonest.boss} respawns in ${h}h ${m}m ${s}s at ${formatDateWithWeekday(soonest.respawn)}`;
+          banner.className = soonest.statusClass.replace("status","");
+          document.querySelectorAll(".countdown").forEach(td => {
+            const time = new Date(td.dataset.time);
+            td.textContent = formatCountdown(time);
+          });
+        }
+        if (countdownInterval) clearInterval(countdownInterval);
+        updateCountdowns();
+        countdownInterval = setInterval(updateCountdowns, 1000);
+      }
+    }
+
+    fetchData();
+    setInterval(render, 60000);
+
+    const themeToggleBtn = document.getElementById("themeToggle");
+    function setTheme(theme) {
+      document.body.classList.remove("light", "dark");
+      document.body.classList.add(theme);
+      localStorage.setItem("theme", theme);
+      themeToggleBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+    }
+    setTheme(localStorage.getItem("theme") || "dark");
+    themeToggleBtn.addEventListener("click", () => {
+      setTheme(document.body.classList.contains("dark") ? "light" : "dark");
+    });
+  </script>
+</body>
+</html>
