@@ -9,7 +9,7 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
     header { display: flex; align-items: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     #respawnBanner { flex: 1; text-align: center; }
-    #nextRespawn { font-weight: bold; font-size: 1.1rem; transition: color 0.3s, text-shadow 0.3s; }
+    #nextRespawn { font-weight: bold; font-size: 1.1rem; }
 
     #factionFilter {
       margin-right: 0.5rem;
@@ -30,21 +30,20 @@
 
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
-    tr:last-child td { border-bottom: none; }
-    h3 { margin-top: 1.5rem; margin-left: 1rem; }
     th { position: sticky; top: 3.1rem; z-index: 5; }
+
     .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
     .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
 
-    /* Countdown color effects */
+    /* Countdown colors */
     .countdown { font-weight: 500; transition: color 0.3s; }
     .countdown-soon { color: #f1c40f; }       /* < 6h */
     .countdown-very-soon { color: #e74c3c; }  /* < 1h */
 
-    /* Next respawn row highlight */
+    /* Highlight next respawn row */
     .next-respawn-row td { font-weight: 600; }
 
-    /* Banner highlight upgrade */
+    /* Banner styling */
     .banner-boss,
     .banner-countdown {
       font-weight: 700;
@@ -61,6 +60,7 @@
       font-weight: 800;
     }
 
+    /* Theme */
     body.dark { background: #2c2c2c; color: #e0e0e0; }
     body.dark header { background: #111; color: white; }
     body.dark table { background: #3a3a3a; }
@@ -82,9 +82,7 @@
 </head>
 <body>
 <header>
-  <div id="respawnBanner">
-    <span id="nextRespawn">Loading...</span>
-  </div>
+  <div id="respawnBanner"><span id="nextRespawn">Loading...</span></div>
   <select id="factionFilter">
     <option value="All">All</option>
     <option value="BloodMoon">BloodMoon</option>
@@ -95,25 +93,19 @@
 
 <h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
 <table class="highlight-today" id="fixedSoon" style="display:none;">
-  <thead>
-    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
-  </thead>
+  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
   <tbody></tbody>
 </table>
 
 <h3 id="dynamicHeader">Dynamic Respawns</h3>
 <table id="upcoming">
-  <thead>
-    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
-  </thead>
+  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
   <tbody></tbody>
 </table>
 
 <div class="separator" id="separator" style="display:none;">──── Other Fixed Respawns ────</div>
 <table id="fixed">
-  <thead>
-    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
-  </thead>
+  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
   <tbody></tbody>
 </table>
 
@@ -125,15 +117,14 @@ const allianceBosses = new Set([
   "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
   "Baron Braudmore","Venatus","Viorent"
 ]);
-
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
 let filterMode = localStorage.getItem("filterMode") || "All";
 document.getElementById("factionFilter").value = filterMode;
-document.getElementById("factionFilter").addEventListener("change", e => {
-  filterMode = e.target.value;
+document.getElementById("factionFilter").addEventListener("change", () => {
+  filterMode = event.target.value;
   localStorage.setItem("filterMode", filterMode);
   render();
 });
@@ -179,33 +170,28 @@ const fixedSchedules = {
   "Nevaea":    [ { day:0, hour:22, minute:0 } ]
 };
 
+let countdownInterval;
+
 async function fetchData() {
   const res = await fetch(sheetURL);
   window.bossData = await res.json();
   render();
 }
 
-let countdownInterval;
-
 function render() {
-  const data = window.bossData || [];
   const now = new Date();
-  let upcoming = [];
-  let fixedUpcoming = [];
+  const data = window.bossData || [];
+  let upcoming = [], fixedUpcoming = [];
 
-  /* Dynamic bosses */
   data.forEach(row => {
-    const boss = row.Boss ? row.Boss.trim() : "";
-    if (!boss) return;
-    if (!respawnTimes[boss]) return;
-    if (row.DeathTime === "") return;
+    const boss = row.Boss?.trim();
+    if (!boss || !respawnTimes[boss] || !row.DeathTime) return;
     const death = new Date(row.DeathTime);
     if (isNaN(death)) return;
     const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
     upcoming.push({ boss, respawn });
   });
 
-  /* Fixed bosses */
   Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
     schedules.forEach(s => {
       const respawn = new Date(now);
@@ -218,22 +204,25 @@ function render() {
 
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
+  upcoming = upcoming.filter(e => !fixedSchedules[e.boss]);
 
-  upcoming = upcoming.filter(entry => !fixedSchedules[entry.boss]);
-
-  /* DYNAMIC */
   document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
     const ts = r.respawn.getTime();
-    return `
-      <tr data-respawn-ts="${ts}">
-        <td>${displayName(r.boss)}</td>
-        <td></td>
-        <td>${formatDateWithWeekday(r.respawn)}</td>
-        <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
-      </tr>`;
+    const status = r.respawn - now <= 0 ? "🟢 Alive"
+                : (r.respawn - now) / 3600000 < 1 ? "🔴 Very Soon"
+                : (r.respawn - now) / 3600000 < 6 ? "🟡 Soon"
+                : r.respawn.toDateString() === now.toDateString() ? "⏳ Today"
+                : r.respawn.toDateString() === new Date(now.getTime() + 86400000).toDateString() ? "📅 Tomorrow"
+                : "📌 Scheduled";
+
+    return `<tr data-respawn-ts="${ts}">
+      <td>${displayName(r.boss)}</td>
+      <td>${status}</td>
+      <td>${formatDateWithWeekday(r.respawn)}</td>
+      <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
+    </tr>`;
   }).join("");
 
-  /* FIXED TODAY + LATER */
   const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
 
@@ -261,11 +250,10 @@ function render() {
   document.getElementById("fixedSoon").style.display = soonFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* BANNER + HIGHLIGHT */
   const allRespawns = [...upcoming, ...fixedUpcoming];
   const banner = document.getElementById("nextRespawn");
 
-  if (allRespawns.length > 0) {
+  if (allRespawns.length) {
     const next = allRespawns.sort((a,b) => a.respawn - b.respawn)[0];
     const nextTs = next.respawn.getTime().toString();
 
@@ -274,9 +262,9 @@ function render() {
     });
 
     function rebanner() {
-      const remaining = next.respawn - new Date();
+      const nowTick = new Date();
+      const remaining = next.respawn - nowTick;
       const hoursLeft = remaining / 3600000;
-
       let bannerColor = "";
       if (hoursLeft < 1) bannerColor = "very-soon";
       else if (hoursLeft < 6) bannerColor = "soon";
@@ -288,17 +276,16 @@ function render() {
         at ${formatDateWithWeekday(next.respawn)}
       `;
 
-      const nowInner = new Date();
       document.querySelectorAll(".countdown").forEach(td => {
         const t = new Date(Number(td.dataset.time));
         td.textContent = formatCountdown(t);
 
         td.classList.remove("countdown-soon","countdown-very-soon");
-        const diff = t - nowInner;
+        const diff = t - nowTick;
         if (diff > 0) {
-          const hours = diff / 3600000;
-          if (hours < 1) td.classList.add("countdown-very-soon");
-          else if (hours < 6) td.classList.add("countdown-soon");
+          const h = diff / 3600000;
+          if (h < 1) td.classList.add("countdown-very-soon");
+          else if (h < 6) td.classList.add("countdown-soon");
         }
       });
     }
@@ -312,7 +299,7 @@ function render() {
 fetchData();
 setInterval(render, 60000);
 
-/* THEME TOGGLE */
+/* Theme toggle */
 const themeToggleBtn = document.getElementById("themeToggle");
 function setTheme(theme) {
   document.body.classList.remove("light","dark");
