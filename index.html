@@ -32,7 +32,7 @@
     th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
     tr:last-child td { border-bottom: none; }
     h3 { margin-top: 1.5rem; margin-left: 1rem; }
-    th { position: sticky; top: 3.1rem; z-index: 5; } /* under header */
+    th { position: sticky; top: 3.1rem; z-index: 5; }
     .row-alive { background: rgba(119, 221, 119, 0.25); }
     .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
     .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
@@ -67,7 +67,7 @@
   <button id="themeToggle">🌙</button>
 </header>
 
-<!-- FIXED RESPAWNS TODAY – ALWAYS ON TOP -->
+<!-- FIXED RESPAWNS TODAY – ALWAYS FIRST -->
 <h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
 <table class="highlight-today" id="fixedSoon" style="display:none;">
   <thead>
@@ -97,31 +97,33 @@
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* Alliance list (now includes Venatus, Viorent) */
+/* Alliance list (now includes Venatus + Viorent) */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus",
   "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
   "Baron Braudmore","Venatus","Viorent"
 ]);
 
-/* Display name helper for (Alliance) suffix */
+/* Applies " (Alliance)" on display only */
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
-/* Filter mode: All / BloodMoon / Alliance */
+/* Filter mode logic */
 let filterMode = localStorage.getItem("filterMode") || "All";
 const factionFilter = document.getElementById("factionFilter");
 factionFilter.value = filterMode;
-
 factionFilter.addEventListener("change", () => {
   filterMode = factionFilter.value;
   localStorage.setItem("filterMode", filterMode);
   render();
 });
 
+/* FIX — robust matching so Undomiel never disappears again */
 function passesFilter(boss) {
-  const isAlliance = allianceBosses.has(boss);
+  const clean = boss.toLowerCase().trim();
+  const isAlliance = [...allianceBosses].some(a => clean.includes(a.toLowerCase()));
+
   if (filterMode === "All") return true;
   if (filterMode === "Alliance") return isAlliance;
   if (filterMode === "BloodMoon") return !isAlliance;
@@ -138,7 +140,7 @@ const respawnTimes = {
   "Secreta": 62, "Ordo": 62, "Asta": 62, "Supore": 62
 };
 
-/* Fixed schedules (plus Icaruthia, Motti, Nevaea) */
+/* Fixed schedules */
 const fixedSchedules = {
   "Clemantis": [ { day: 1, hour: 11, minute: 30 }, { day: 4, hour: 19, minute: 0 } ],
   "Saphirus":  [ { day: 2, hour: 11, minute: 30 }, { day: 0, hour: 17, minute: 0 } ],
@@ -150,16 +152,9 @@ const fixedSchedules = {
   "Auraq":     [ { day: 3, hour: 21, minute: 0 }, { day: 5, hour: 22, minute: 0 } ],
   "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ],
   "Benji":     [ { day: 0, hour: 21, minute: 0 } ],
-
-  "Icaruthia": [
-    { day: 2, hour: 21, minute: 0 }, { day: 5, hour: 21, minute: 0 }
-  ],
-  "Motti": [
-    { day: 3, hour: 19, minute: 0 }, { day: 6, hour: 19, minute: 0 }
-  ],
-  "Nevaea": [
-    { day: 0, hour: 22, minute: 0 }
-  ]
+  "Icaruthia": [ { day: 2, hour: 21, minute: 0 }, { day: 5, hour: 21, minute: 0 } ],
+  "Motti":     [ { day: 3, hour: 19, minute: 0 }, { day: 6, hour: 19, minute: 0 } ],
+  "Nevaea":    [ { day: 0, hour: 22, minute: 0 } ]
 };
 
 function formatDate(date) {
@@ -194,7 +189,6 @@ function render() {
   let upcoming = [];
   let fixedUpcoming = [];
 
-  /* Dynamic bosses from sheet */
   data.forEach(row => {
     const boss = row.Boss ? row.Boss.trim() : "";
     if (!boss) return;
@@ -207,7 +201,6 @@ function render() {
     upcoming.push({ boss, respawn });
   });
 
-  /* Fixed bosses */
   Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
     if (!passesFilter(boss)) return;
     schedules.forEach(s => {
@@ -222,7 +215,7 @@ function render() {
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
-  /* Dynamic table with fixed status logic */
+  /* DYNAMIC TABLE */
   document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
     let diff = r.respawn - now;
     let hours = diff / 3600000;
@@ -243,7 +236,7 @@ function render() {
       </tr>`;
   }).join("");
 
-  /* Fixed: split into "today" vs later */
+  /* FIXED */
   const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
 
@@ -261,7 +254,7 @@ function render() {
   document.getElementById("fixedSoon").style.display = soonFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* Banner */
+  /* BANNER */
   const allRespawns = [...upcoming, ...fixedUpcoming];
   const banner = document.getElementById("nextRespawn");
 
