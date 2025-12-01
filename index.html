@@ -97,19 +97,19 @@
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* Alliance list (now includes Venatus + Viorent) */
+/* Alliance list (includes Venatus + Viorent) */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus",
   "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
   "Baron Braudmore","Venatus","Viorent"
 ]);
 
-/* Applies " (Alliance)" on display only */
+/* Display name helper for (Alliance) suffix */
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
-/* Filter mode logic */
+/* Filter mode: All / BloodMoon / Alliance */
 let filterMode = localStorage.getItem("filterMode") || "All";
 const factionFilter = document.getElementById("factionFilter");
 factionFilter.value = filterMode;
@@ -119,10 +119,23 @@ factionFilter.addEventListener("change", () => {
   render();
 });
 
-/* FIX — robust matching so Undomiel never disappears again */
+/* Robust name normalizer to handle weird spaces/accents */
+function normalizeBossName(name) {
+  return (name || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+/* Use normalized names for filtering */
 function passesFilter(boss) {
-  const clean = boss.toLowerCase().trim();
-  const isAlliance = [...allianceBosses].some(a => clean.includes(a.toLowerCase()));
+  const clean = normalizeBossName(boss);
+  const isAlliance = [...allianceBosses]
+    .map(a => normalizeBossName(a))
+    .some(a => clean.includes(a));
 
   if (filterMode === "All") return true;
   if (filterMode === "Alliance") return isAlliance;
@@ -189,6 +202,7 @@ function render() {
   let upcoming = [];
   let fixedUpcoming = [];
 
+  /* Dynamic bosses from sheet */
   data.forEach(row => {
     const boss = row.Boss ? row.Boss.trim() : "";
     if (!boss) return;
@@ -201,6 +215,7 @@ function render() {
     upcoming.push({ boss, respawn });
   });
 
+  /* Fixed bosses */
   Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
     if (!passesFilter(boss)) return;
     schedules.forEach(s => {
@@ -214,6 +229,9 @@ function render() {
 
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
+
+  /* IMPORTANT: remove fixed bosses from dynamic list completely */
+  upcoming = upcoming.filter(entry => !fixedSchedules[entry.boss]);
 
   /* DYNAMIC TABLE */
   document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
