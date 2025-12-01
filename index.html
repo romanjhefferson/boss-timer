@@ -115,25 +115,42 @@
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
+/* Alliance list */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus",
   "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
   "Baron Braudmore","Venatus","Viorent"
 ]);
+
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
+/* FILTER STATE */
 let filterMode = localStorage.getItem("filterMode") || "All";
-document.getElementById("factionFilter").value = filterMode;
-document.getElementById("factionFilter").addEventListener("change", (e) => {
+const factionFilter = document.getElementById("factionFilter");
+factionFilter.value = filterMode;
+
+/* Which bosses pass the current filter? */
+function passesFilter(boss) {
+  const isAlliance = allianceBosses.has(boss);
+  if (filterMode === "All") return true;
+  if (filterMode === "Alliance") return isAlliance;
+  if (filterMode === "BloodMoon") return !isAlliance;
+  return true;
+}
+
+factionFilter.addEventListener("change", (e) => {
   filterMode = e.target.value;
   localStorage.setItem("filterMode", filterMode);
   render();
 });
 
+/* Formatting helpers */
 function formatDate(date) {
-  return date.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+  return date.toLocaleString('en-US', {
+    month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true
+  });
 }
 function formatDateWithWeekday(date) {
   const w = date.toLocaleDateString('en-US', { weekday:'long' });
@@ -148,6 +165,7 @@ function formatCountdown(t) {
   return `${h}h ${m}m ${s}s`;
 }
 
+/* Dynamic timers */
 const respawnTimes = { 
   "Venatus": 10,"Viorent": 10,"Araneo": 24,"Undomiel": 24,
   "Lady Dalia": 18,"Amentis": 29,"Ego": 21,"Livera": 24,
@@ -157,6 +175,7 @@ const respawnTimes = {
   "Secreta": 62,"Ordo": 62,"Asta": 62,"Supore": 62
 };
 
+/* Fixed schedules */
 const fixedSchedules = {
   "Clemantis": [ { day:1, hour:11, minute:30 }, { day:4, hour:19, minute:0 } ],
   "Saphirus":  [ { day:2, hour:11, minute:30 }, { day:0, hour:17, minute:0 } ],
@@ -175,27 +194,33 @@ const fixedSchedules = {
 
 let countdownInterval;
 
+/* Data fetch */
 async function fetchData() {
   const res = await fetch(sheetURL);
   window.bossData = await res.json();
   render();
 }
 
+/* Main render */
 function render() {
   const now = new Date();
   const data = window.bossData || [];
   let upcoming = [], fixed = [];
 
+  /* Dynamic bosses */
   data.forEach(r => {
     const b = r.Boss?.trim();
     if (!b || !respawnTimes[b] || !r.DeathTime) return;
+    if (!passesFilter(b)) return;
     const death = new Date(r.DeathTime);
     if (isNaN(death)) return;
     const respawn = new Date(death.getTime() + respawnTimes[b] * 3600000);
     upcoming.push({ boss: b, respawn });
   });
 
+  /* Fixed bosses */
   Object.entries(fixedSchedules).forEach(([boss, scheds]) => {
+    if (!passesFilter(boss)) return;
     scheds.forEach(s => {
       const respawn = new Date(now);
       respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
@@ -209,13 +234,16 @@ function render() {
   fixed.sort((a,b) => a.respawn - b.respawn);
   upcoming = upcoming.filter(r => !fixedSchedules[r.boss]);
 
+  /* Dynamic table */
   document.querySelector("#upcoming tbody").innerHTML =
     upcoming.map(r => {
       const ts = r.respawn.getTime();
+      const diff = r.respawn - now;
+      const hDiff = diff / 3600000;
       const status =
-        r.respawn - now <= 0 ? "🟢 Alive" :
-        (r.respawn - now)/3600000 < 1 ? "🔴 Very Soon" :
-        (r.respawn - now)/3600000 < 6 ? "🟡 Soon" :
+        diff <= 0 ? "🟢 Alive" :
+        hDiff < 1 ? "🔴 Very Soon" :
+        hDiff < 6 ? "🟡 Soon" :
         r.respawn.toDateString() === now.toDateString() ? "⏳ Today" :
         r.respawn.toDateString() === new Date(now.getTime()+86400000).toDateString() ? "📅 Tomorrow" :
         "📌 Scheduled";
@@ -228,6 +256,7 @@ function render() {
       </tr>`;
     }).join("");
 
+  /* Fixed tables */
   const todayFixed = fixed.filter(f => f.respawn.toDateString() === now.toDateString());
   const laterFixed = fixed.filter(f => f.respawn.toDateString() !== now.toDateString());
 
@@ -257,10 +286,14 @@ function render() {
   document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
+  /* Banner + countdown updates */
   const all = [...upcoming, ...fixed];
   const banner = document.getElementById("nextRespawn");
-
-  if (!all.length) return;
+  if (!all.length) {
+    banner.textContent = "No upcoming respawns (check filter).";
+    if (countdownInterval) clearInterval(countdownInterval);
+    return;
+  }
 
   const next = all.sort((a,b) => a.respawn - b.respawn)[0];
   const nextTs = next.respawn.getTime().toString();
@@ -272,11 +305,11 @@ function render() {
   function rebanner() {
     const nowTick = new Date();
     const diff = next.respawn - nowTick;
-    const hoursLeft = diff / 3600000;
+    const hLeft = diff / 3600000;
 
     let bannerColor = "";
-    if (hoursLeft < 1) bannerColor = "very-soon";
-    else if (hoursLeft < 6) bannerColor = "soon";
+    if (hLeft < 1) bannerColor = "very-soon";
+    else if (hLeft < 6) bannerColor = "soon";
 
     banner.innerHTML = `
       <span class="banner-boss ${bannerColor}">${displayName(next.boss)}</span>
@@ -291,7 +324,7 @@ function render() {
       td.classList.remove("countdown-soon","countdown-very-soon");
       const d = t - nowTick;
       if (d > 0) {
-        const h = d/3600000;
+        const h = d / 3600000;
         if (h < 1) td.classList.add("countdown-very-soon");
         else if (h < 6) td.classList.add("countdown-soon");
       }
@@ -303,9 +336,11 @@ function render() {
   countdownInterval = setInterval(rebanner, 1000);
 }
 
+/* Initial load */
 fetchData();
 setInterval(render, 60000);
 
+/* Theme toggle */
 const themeToggleBtn = document.getElementById("themeToggle");
 function setTheme(t) {
   document.body.classList.remove("light","dark");
