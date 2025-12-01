@@ -37,13 +37,13 @@
 
     /* Countdown colors */
     .countdown { font-weight: 500; transition: color 0.3s; }
-    .countdown-soon { color: #f1c40f; }       /* < 6h */
-    .countdown-very-soon { color: #e74c3c; }  /* < 1h */
+    .countdown-soon { color: #f1c40f; }
+    .countdown-very-soon { color: #e74c3c; }
 
-    /* Highlight next respawn row */
+    /* Next respawn row */
     .next-respawn-row td { font-weight: 600; }
 
-    /* Banner styling */
+    /* Banner highlight */
     .banner-boss,
     .banner-countdown {
       font-weight: 700;
@@ -60,7 +60,7 @@
       font-weight: 800;
     }
 
-    /* Theme */
+    /* Themes */
     body.dark { background: #2c2c2c; color: #e0e0e0; }
     body.dark header { background: #111; color: white; }
     body.dark table { background: #3a3a3a; }
@@ -78,6 +78,31 @@
     body.light .highlight-today { border-color: #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
     body.light .separator { border-color: #bbb; color: #333; }
     body.light .next-respawn-row { background: rgba(255,204,102,0.18); }
+
+    /* MOBILE RESPONSIVE FIX — iPhone Safari */
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 0.55rem;
+        text-align: center;
+      }
+      #respawnBanner {
+        order: 1;
+        width: 100%;
+        padding: 0 0.4rem;
+      }
+      #nextRespawn { font-size: 1.0rem; line-height: 1.25rem; }
+
+      #factionFilter, #themeToggle {
+        order: 2;
+        width: 48%;
+        font-size: 0.9rem;
+      }
+
+      table { font-size: 0.87rem; }
+      th, td { padding: 0.55rem; }
+      .banner-boss, .banner-countdown { font-size: 1.05rem; }
+    }
 </style>
 </head>
 <body>
@@ -204,6 +229,7 @@ function render() {
 
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
+
   upcoming = upcoming.filter(e => !fixedSchedules[e.boss]);
 
   document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
@@ -226,25 +252,27 @@ function render() {
   const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
 
-  document.querySelector("#fixedSoon tbody").innerHTML = soonFixed.map(r => {
-    const ts = r.respawn.getTime();
-    return `<tr data-respawn-ts="${ts}">
-      <td>${displayName(r.boss)}</td>
-      <td>⚡ Today</td>
-      <td>${formatDateWithWeekday(r.respawn)}</td>
-      <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
-    </tr>`;
-  }).join("");
+  document.querySelector("#fixedSoon tbody").innerHTML =
+    soonFixed.map(r => {
+      const ts = r.respawn.getTime();
+      return `<tr data-respawn-ts="${ts}">
+        <td>${displayName(r.boss)}</td>
+        <td>⚡ Today</td>
+        <td>${formatDateWithWeekday(r.respawn)}</td>
+        <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
+      </tr>`;
+    }).join("");
 
-  document.querySelector("#fixed tbody").innerHTML = laterFixed.map(r => {
-    const ts = r.respawn.getTime();
-    return `<tr data-respawn-ts="${ts}">
-      <td>${displayName(r.boss)}</td>
-      <td>Scheduled</td>
-      <td>${formatDateWithWeekday(r.respawn)}</td>
-      <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
-    </tr>`;
-  }).join("");
+  document.querySelector("#fixed tbody").innerHTML =
+    laterFixed.map(r => {
+      const ts = r.respawn.getTime();
+      return `<tr data-respawn-ts="${ts}">
+        <td>${displayName(r.boss)}</td>
+        <td>Scheduled</td>
+        <td>${formatDateWithWeekday(r.respawn)}</td>
+        <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
+      </tr>`;
+    }).join("");
 
   document.getElementById("fixedSoonHeader").style.display = soonFixed.length ? "block" : "none";
   document.getElementById("fixedSoon").style.display = soonFixed.length ? "table" : "none";
@@ -265,6 +293,7 @@ function render() {
       const nowTick = new Date();
       const remaining = next.respawn - nowTick;
       const hoursLeft = remaining / 3600000;
+
       let bannerColor = "";
       if (hoursLeft < 1) bannerColor = "very-soon";
       else if (hoursLeft < 6) bannerColor = "soon";
@@ -299,7 +328,7 @@ function render() {
 fetchData();
 setInterval(render, 60000);
 
-/* Theme toggle */
+/* Theme Toggle */
 const themeToggleBtn = document.getElementById("themeToggle");
 function setTheme(theme) {
   document.body.classList.remove("light","dark");
