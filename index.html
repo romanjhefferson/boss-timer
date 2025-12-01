@@ -7,22 +7,32 @@
 
 <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
-    header { display: flex; justify-content: center; align-items: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    header { display: flex; align-items: center; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     #respawnBanner { flex: 1; text-align: center; }
-    #nextRespawn { font-weight: bold; font-size: 1.2rem; transition: color 0.3s, text-shadow 0.3s; }
+    #nextRespawn { font-weight: bold; font-size: 1.1rem; transition: color 0.3s, text-shadow 0.3s; }
 
-    #themeToggle, #allianceToggle { 
-      background: none; border: 1px solid; border-radius: 6px; padding: 0.3rem 0.8rem;
-      cursor: pointer; font-size: 1.2rem; margin-left: 0.4rem;
+    #factionFilter {
+      margin-right: 0.5rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid;
+      font-size: 0.9rem;
     }
-    #themeToggle { position: absolute; right: 6.5rem; top: 50%; transform: translateY(-50%); }
-    #allianceToggle { position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); }
+
+    #themeToggle { 
+      background: none; 
+      border: 1px solid; 
+      border-radius: 6px; 
+      padding: 0.3rem 0.8rem;
+      cursor: pointer; 
+      font-size: 1.1rem;
+    }
 
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; border-radius: 8px; overflow: hidden; }
     th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
     tr:last-child td { border-bottom: none; }
-    h3 { margin-top: 2rem; margin-left: 1rem; }
-    th { position: sticky; top: 0; z-index: 5; }
+    h3 { margin-top: 1.5rem; margin-left: 1rem; }
+    th { position: sticky; top: 3.1rem; z-index: 5; } /* under header */
     .row-alive { background: rgba(119, 221, 119, 0.25); }
     .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
     .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
@@ -32,12 +42,16 @@
     body.dark table { background: #3a3a3a; }
     body.dark th { background: #444; color: #f0f0f0; }
     body.dark td { border-bottom: 1px solid #555; }
+    body.dark .highlight-today { border-color: #b366ff; box-shadow: 0 0 10px rgba(179,102,255,0.7); }
+    body.dark .separator { border-color: #777; color: #ddd; }
 
     body.light { background: #f5f5f5; color: #222; }
     body.light header { background: #fff; color: #222; }
     body.light table { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     body.light th { background: #f0f0f0; color: #222; }
     body.light td { border-bottom: 1px solid #ddd; }
+    body.light .highlight-today { border-color: #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
+    body.light .separator { border-color: #bbb; color: #333; }
 </style>
 </head>
 <body>
@@ -45,42 +59,74 @@
   <div id="respawnBanner">
     <span id="nextRespawn">Loading...</span>
   </div>
+  <select id="factionFilter">
+    <option value="All">All</option>
+    <option value="BloodMoon">BloodMoon</option>
+    <option value="Alliance">Alliance</option>
+  </select>
   <button id="themeToggle">🌙</button>
-  <button id="allianceToggle">⚪🛡 Alliance</button>
 </header>
 
-<h3 id="dynamicHeader">Dynamic Respawns</h3>
-<table id="upcoming">
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-<tbody></tbody>
-</table>
-
+<!-- FIXED RESPAWNS TODAY – ALWAYS ON TOP -->
 <h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
 <table class="highlight-today" id="fixedSoon" style="display:none;">
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-<tbody></tbody>
+  <thead>
+    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
+<!-- DYNAMIC RESPAWNS BELOW FIXED TODAY -->
+<h3 id="dynamicHeader">Dynamic Respawns</h3>
+<table id="upcoming">
+  <thead>
+    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- OTHER FIXED RESPAWNS AT THE BOTTOM -->
 <div class="separator" id="separator" style="display:none;">──── Other Fixed Respawns ────</div>
 <table id="fixed">
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-<tbody></tbody>
+  <thead>
+    <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* Alliance tag list */
+/* Alliance list (now includes Venatus, Viorent) */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus",
-  "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis","Baron Braudmore"
+  "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
+  "Baron Braudmore","Venatus","Viorent"
 ]);
+
+/* Display name helper for (Alliance) suffix */
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
-/* Toggle state */
-let allianceOnly = false;
+/* Filter mode: All / BloodMoon / Alliance */
+let filterMode = localStorage.getItem("filterMode") || "All";
+const factionFilter = document.getElementById("factionFilter");
+factionFilter.value = filterMode;
+
+factionFilter.addEventListener("change", () => {
+  filterMode = factionFilter.value;
+  localStorage.setItem("filterMode", filterMode);
+  render();
+});
+
+function passesFilter(boss) {
+  const isAlliance = allianceBosses.has(boss);
+  if (filterMode === "All") return true;
+  if (filterMode === "Alliance") return isAlliance;
+  if (filterMode === "BloodMoon") return !isAlliance;
+  return true;
+}
 
 /* Dynamic respawn timers */
 const respawnTimes = { 
@@ -92,7 +138,7 @@ const respawnTimes = {
   "Secreta": 62, "Ordo": 62, "Asta": 62, "Supore": 62
 };
 
-/* Fixed schedules including new bosses */
+/* Fixed schedules (plus Icaruthia, Motti, Nevaea) */
 const fixedSchedules = {
   "Clemantis": [ { day: 1, hour: 11, minute: 30 }, { day: 4, hour: 19, minute: 0 } ],
   "Saphirus":  [ { day: 2, hour: 11, minute: 30 }, { day: 0, hour: 17, minute: 0 } ],
@@ -148,9 +194,12 @@ function render() {
   let upcoming = [];
   let fixedUpcoming = [];
 
+  /* Dynamic bosses from sheet */
   data.forEach(row => {
-    const boss = row.Boss.trim();
-    if (allianceOnly && !allianceBosses.has(boss)) return;
+    const boss = row.Boss ? row.Boss.trim() : "";
+    if (!boss) return;
+    if (!passesFilter(boss)) return;
+
     const death = new Date(row.DeathTime);
     const hours = respawnTimes[boss];
     if (!hours || isNaN(death)) return;
@@ -158,8 +207,9 @@ function render() {
     upcoming.push({ boss, respawn });
   });
 
+  /* Fixed bosses */
   Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
-    if (allianceOnly && !allianceBosses.has(boss)) return;
+    if (!passesFilter(boss)) return;
     schedules.forEach(s => {
       const respawn = new Date(now);
       respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
@@ -172,7 +222,7 @@ function render() {
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
-  /* DYNAMIC — FIXED STATUS LOGIC */
+  /* Dynamic table with fixed status logic */
   document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
     let diff = r.respawn - now;
     let hours = diff / 3600000;
@@ -185,15 +235,15 @@ function render() {
     else statusText = "📌 Scheduled";
 
     return `
-    <tr>
-      <td>${displayName(r.boss)}</td>
-      <td>${statusText}</td>
-      <td>${formatDateWithWeekday(r.respawn)}</td>
-      <td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td>
-    </tr>`;
+      <tr>
+        <td>${displayName(r.boss)}</td>
+        <td>${statusText}</td>
+        <td>${formatDateWithWeekday(r.respawn)}</td>
+        <td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td>
+      </tr>`;
   }).join("");
 
-  /* FIXED TABLES */
+  /* Fixed: split into "today" vs later */
   const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
 
@@ -211,20 +261,26 @@ function render() {
   document.getElementById("fixedSoon").style.display = soonFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* BANNER */
+  /* Banner */
   const allRespawns = [...upcoming, ...fixedUpcoming];
+  const banner = document.getElementById("nextRespawn");
+
   if (allRespawns.length > 0) {
     const next = allRespawns.sort((a,b) => a.respawn - b.respawn)[0];
-    const banner = document.getElementById("nextRespawn");
+
     function rebanner() {
       banner.textContent = `${displayName(next.boss)} respawns in ${formatCountdown(next.respawn)} at ${formatDateWithWeekday(next.respawn)}`;
       document.querySelectorAll(".countdown").forEach(td => {
-        td.textContent = formatCountdown(new Date(td.dataset.time));
+        const t = new Date(td.dataset.time);
+        td.textContent = formatCountdown(t);
       });
     }
     if (countdownInterval) clearInterval(countdownInterval);
     rebanner();
     countdownInterval = setInterval(rebanner, 1000);
+  } else {
+    banner.textContent = "No upcoming respawns (check filter).";
+    if (countdownInterval) clearInterval(countdownInterval);
   }
 }
 
@@ -242,18 +298,6 @@ function setTheme(theme) {
 setTheme(localStorage.getItem("theme") || "dark");
 themeToggleBtn.addEventListener("click", () => {
   setTheme(document.body.classList.contains("dark") ? "light" : "dark");
-});
-
-/* ALLIANCE FILTER TOGGLE */
-const allianceToggleBtn = document.getElementById("allianceToggle");
-function updateAllianceToggleGraphics() {
-  allianceToggleBtn.textContent = allianceOnly ? "🟢🛡 Alliance" : "⚪🛡 Alliance";
-}
-updateAllianceToggleGraphics();
-allianceToggleBtn.addEventListener("click", () => {
-  allianceOnly = !allianceOnly;
-  updateAllianceToggleGraphics();
-  render();
 });
 </script>
 </body>
