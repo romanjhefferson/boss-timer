@@ -35,34 +35,27 @@
     .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
     .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
 
-    /* Countdown colors */
     .countdown { font-weight: 500; transition: color 0.3s; }
     .countdown-soon { color: #f1c40f; }
     .countdown-very-soon { color: #e74c3c; }
 
-    /* Next respawn row */
     .next-respawn-row td { font-weight: 600; }
 
-    /* Banner highlight */
     .banner-boss,
     .banner-countdown {
       font-weight: 700;
       transition: color 0.35s, text-shadow 0.35s;
     }
     .banner-boss.soon,
-    .banner-countdown.soon {
-      color: #f1c40f;
-    }
+    .banner-countdown.soon { color: #f1c40f; }
     .banner-boss.very-soon,
     .banner-countdown.very-soon {
       color: #e74c3c;
       text-shadow: 0 0 6px rgba(231, 76, 60, 0.65);
-      font-weight: 800;
     }
 
-    /* Themes */
     body.dark { background: #2c2c2c; color: #e0e0e0; }
-    body.dark header { background: #111; color: white; }
+    body.dark header { background: #111; }
     body.dark table { background: #3a3a3a; }
     body.dark th { background: #444; color: #f0f0f0; }
     body.dark td { border-bottom: 1px solid #555; }
@@ -79,26 +72,11 @@
     body.light .separator { border-color: #bbb; color: #333; }
     body.light .next-respawn-row { background: rgba(255,204,102,0.18); }
 
-    /* MOBILE RESPONSIVE FIX — iPhone Safari */
     @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        gap: 0.55rem;
-        text-align: center;
-      }
-      #respawnBanner {
-        order: 1;
-        width: 100%;
-        padding: 0 0.4rem;
-      }
-      #nextRespawn { font-size: 1.0rem; line-height: 1.25rem; }
-
-      #factionFilter, #themeToggle {
-        order: 2;
-        width: 48%;
-        font-size: 0.9rem;
-      }
-
+      header { flex-direction: column; gap: 0.55rem; text-align: center; }
+      #respawnBanner { width: 100%; padding: 0 0.4rem; }
+      #nextRespawn { font-size: 1rem; line-height: 1.22rem; }
+      #factionFilter, #themeToggle { width: 48%; font-size: 0.9rem; }
       table { font-size: 0.87rem; }
       th, td { padding: 0.55rem; }
       .banner-boss, .banner-countdown { font-size: 1.05rem; }
@@ -122,7 +100,7 @@
   <tbody></tbody>
 </table>
 
-<h3 id="dynamicHeader">Dynamic Respawns</h3>
+<h3>Dynamic Respawns</h3>
 <table id="upcoming">
   <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
   <tbody></tbody>
@@ -148,8 +126,8 @@ function displayName(boss) {
 
 let filterMode = localStorage.getItem("filterMode") || "All";
 document.getElementById("factionFilter").value = filterMode;
-document.getElementById("factionFilter").addEventListener("change", () => {
-  filterMode = event.target.value;
+document.getElementById("factionFilter").addEventListener("change", (e) => {
+  filterMode = e.target.value;
   localStorage.setItem("filterMode", filterMode);
   render();
 });
@@ -158,25 +136,25 @@ function formatDate(date) {
   return date.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
 }
 function formatDateWithWeekday(date) {
-  const weekday = date.toLocaleDateString('en-US', { weekday:'long' });
-  return `${formatDate(date)} (${weekday})`;
+  const w = date.toLocaleDateString('en-US', { weekday:'long' });
+  return `${formatDate(date)} (${w})`;
 }
-function formatCountdown(target) {
-  const diff = target - new Date();
-  if (diff <= 0) return "Now!";
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
+function formatCountdown(t) {
+  const d = t - new Date();
+  if (d <= 0) return "Now!";
+  const h = Math.floor(d / 3600000),
+        m = Math.floor((d % 3600000) / 60000),
+        s = Math.floor((d % 60000) / 1000);
   return `${h}h ${m}m ${s}s`;
 }
 
 const respawnTimes = { 
-  "Venatus": 10, "Viorent": 10, "Araneo": 24, "Undomiel": 24,
-  "Lady Dalia": 18, "Amentis": 29, "Ego": 21, "Livera": 24,
-  "General Aquleus": 29, "Baron Braudmore": 32, "Wannitas": 48,
-  "Metus": 48, "Duplican": 48, "Shuliar": 35, "Gareth": 32,
-  "Titore": 37, "Larba": 35, "Catena": 35,
-  "Secreta": 62, "Ordo": 62, "Asta": 62, "Supore": 62
+  "Venatus": 10,"Viorent": 10,"Araneo": 24,"Undomiel": 24,
+  "Lady Dalia": 18,"Amentis": 29,"Ego": 21,"Livera": 24,
+  "General Aquleus": 29,"Baron Braudmore": 32,"Wannitas": 48,
+  "Metus": 48,"Duplican": 48,"Shuliar": 35,"Gareth": 32,
+  "Titore": 37,"Larba": 35,"Catena": 35,
+  "Secreta": 62,"Ordo": 62,"Asta": 62,"Supore": 62
 };
 
 const fixedSchedules = {
@@ -206,54 +184,55 @@ async function fetchData() {
 function render() {
   const now = new Date();
   const data = window.bossData || [];
-  let upcoming = [], fixedUpcoming = [];
+  let upcoming = [], fixed = [];
 
-  data.forEach(row => {
-    const boss = row.Boss?.trim();
-    if (!boss || !respawnTimes[boss] || !row.DeathTime) return;
-    const death = new Date(row.DeathTime);
+  data.forEach(r => {
+    const b = r.Boss?.trim();
+    if (!b || !respawnTimes[b] || !r.DeathTime) return;
+    const death = new Date(r.DeathTime);
     if (isNaN(death)) return;
-    const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
-    upcoming.push({ boss, respawn });
+    const respawn = new Date(death.getTime() + respawnTimes[b] * 3600000);
+    upcoming.push({ boss: b, respawn });
   });
 
-  Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
-    schedules.forEach(s => {
+  Object.entries(fixedSchedules).forEach(([boss, scheds]) => {
+    scheds.forEach(s => {
       const respawn = new Date(now);
       respawn.setDate(now.getDate() + ((s.day - now.getDay() + 7) % 7));
       respawn.setHours(s.hour, s.minute, 0, 0);
       if (respawn < now) respawn.setDate(respawn.getDate() + 7);
-      fixedUpcoming.push({ boss, respawn });
+      fixed.push({ boss, respawn });
     });
   });
 
   upcoming.sort((a,b) => a.respawn - b.respawn);
-  fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
+  fixed.sort((a,b) => a.respawn - b.respawn);
+  upcoming = upcoming.filter(r => !fixedSchedules[r.boss]);
 
-  upcoming = upcoming.filter(e => !fixedSchedules[e.boss]);
+  document.querySelector("#upcoming tbody").innerHTML =
+    upcoming.map(r => {
+      const ts = r.respawn.getTime();
+      const status =
+        r.respawn - now <= 0 ? "🟢 Alive" :
+        (r.respawn - now)/3600000 < 1 ? "🔴 Very Soon" :
+        (r.respawn - now)/3600000 < 6 ? "🟡 Soon" :
+        r.respawn.toDateString() === now.toDateString() ? "⏳ Today" :
+        r.respawn.toDateString() === new Date(now.getTime()+86400000).toDateString() ? "📅 Tomorrow" :
+        "📌 Scheduled";
 
-  document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
-    const ts = r.respawn.getTime();
-    const status = r.respawn - now <= 0 ? "🟢 Alive"
-                : (r.respawn - now) / 3600000 < 1 ? "🔴 Very Soon"
-                : (r.respawn - now) / 3600000 < 6 ? "🟡 Soon"
-                : r.respawn.toDateString() === now.toDateString() ? "⏳ Today"
-                : r.respawn.toDateString() === new Date(now.getTime() + 86400000).toDateString() ? "📅 Tomorrow"
-                : "📌 Scheduled";
+      return `<tr data-respawn-ts="${ts}">
+        <td>${displayName(r.boss)}</td>
+        <td>${status}</td>
+        <td>${formatDateWithWeekday(r.respawn)}</td>
+        <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
+      </tr>`;
+    }).join("");
 
-    return `<tr data-respawn-ts="${ts}">
-      <td>${displayName(r.boss)}</td>
-      <td>${status}</td>
-      <td>${formatDateWithWeekday(r.respawn)}</td>
-      <td class="countdown" data-time="${ts}">${formatCountdown(r.respawn)}</td>
-    </tr>`;
-  }).join("");
-
-  const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
-  const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
+  const todayFixed = fixed.filter(f => f.respawn.toDateString() === now.toDateString());
+  const laterFixed = fixed.filter(f => f.respawn.toDateString() !== now.toDateString());
 
   document.querySelector("#fixedSoon tbody").innerHTML =
-    soonFixed.map(r => {
+    todayFixed.map(r => {
       const ts = r.respawn.getTime();
       return `<tr data-respawn-ts="${ts}">
         <td>${displayName(r.boss)}</td>
@@ -274,67 +253,65 @@ function render() {
       </tr>`;
     }).join("");
 
-  document.getElementById("fixedSoonHeader").style.display = soonFixed.length ? "block" : "none";
-  document.getElementById("fixedSoon").style.display = soonFixed.length ? "table" : "none";
+  document.getElementById("fixedSoonHeader").style.display = todayFixed.length ? "block" : "none";
+  document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  const allRespawns = [...upcoming, ...fixedUpcoming];
+  const all = [...upcoming, ...fixed];
   const banner = document.getElementById("nextRespawn");
 
-  if (allRespawns.length) {
-    const next = allRespawns.sort((a,b) => a.respawn - b.respawn)[0];
-    const nextTs = next.respawn.getTime().toString();
+  if (!all.length) return;
 
-    document.querySelectorAll("tr[data-respawn-ts]").forEach(tr => {
-      tr.classList.toggle("next-respawn-row", tr.dataset.respawnTs === nextTs);
+  const next = all.sort((a,b) => a.respawn - b.respawn)[0];
+  const nextTs = next.respawn.getTime().toString();
+
+  document.querySelectorAll("tr[data-respawn-ts]").forEach(tr => {
+    tr.classList.toggle("next-respawn-row", tr.dataset.respawnTs === nextTs);
+  });
+
+  function rebanner() {
+    const nowTick = new Date();
+    const diff = next.respawn - nowTick;
+    const hoursLeft = diff / 3600000;
+
+    let bannerColor = "";
+    if (hoursLeft < 1) bannerColor = "very-soon";
+    else if (hoursLeft < 6) bannerColor = "soon";
+
+    banner.innerHTML = `
+      <span class="banner-boss ${bannerColor}">${displayName(next.boss)}</span>
+      respawns in
+      <span class="banner-countdown ${bannerColor}">${formatCountdown(next.respawn)}</span>
+      at ${formatDateWithWeekday(next.respawn)}
+    `;
+
+    document.querySelectorAll(".countdown").forEach(td => {
+      const t = new Date(Number(td.dataset.time));
+      td.textContent = formatCountdown(t);
+      td.classList.remove("countdown-soon","countdown-very-soon");
+      const d = t - nowTick;
+      if (d > 0) {
+        const h = d/3600000;
+        if (h < 1) td.classList.add("countdown-very-soon");
+        else if (h < 6) td.classList.add("countdown-soon");
+      }
     });
-
-    function rebanner() {
-      const nowTick = new Date();
-      const remaining = next.respawn - nowTick;
-      const hoursLeft = remaining / 3600000;
-
-      let bannerColor = "";
-      if (hoursLeft < 1) bannerColor = "very-soon";
-      else if (hoursLeft < 6) bannerColor = "soon";
-
-      banner.innerHTML = `
-        <span class="banner-boss ${bannerColor}">${displayName(next.boss)}</span>
-        respawns in
-        <span class="banner-countdown ${bannerColor}">${formatCountdown(next.respawn)}</span>
-        at ${formatDateWithWeekday(next.respawn)}
-      `;
-
-      document.querySelectorAll(".countdown").forEach(td => {
-        const t = new Date(Number(td.dataset.time));
-        td.textContent = formatCountdown(t);
-
-        td.classList.remove("countdown-soon","countdown-very-soon");
-        const diff = t - nowTick;
-        if (diff > 0) {
-          const h = diff / 3600000;
-          if (h < 1) td.classList.add("countdown-very-soon");
-          else if (h < 6) td.classList.add("countdown-soon");
-        }
-      });
-    }
-
-    if (countdownInterval) clearInterval(countdownInterval);
-    rebanner();
-    countdownInterval = setInterval(rebanner, 1000);
   }
+
+  if (countdownInterval) clearInterval(countdownInterval);
+  rebanner();
+  countdownInterval = setInterval(rebanner, 1000);
 }
 
 fetchData();
 setInterval(render, 60000);
 
-/* Theme Toggle */
 const themeToggleBtn = document.getElementById("themeToggle");
-function setTheme(theme) {
+function setTheme(t) {
   document.body.classList.remove("light","dark");
-  document.body.classList.add(theme);
-  localStorage.setItem("theme", theme);
-  themeToggleBtn.textContent = theme === "dark" ? "🌙" : "☀️";
+  document.body.classList.add(t);
+  localStorage.setItem("theme", t);
+  themeToggleBtn.textContent = t === "dark" ? "🌙" : "☀️";
 }
 setTheme(localStorage.getItem("theme") || "dark");
 themeToggleBtn.addEventListener("click", () => {
