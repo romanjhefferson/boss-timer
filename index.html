@@ -15,34 +15,19 @@
     tr:last-child td { border-bottom: none; }
     h3 { margin-top: 2rem; margin-left: 1rem; }
     th { position: sticky; top: 0; z-index: 5; }
-    .row-alive { background: rgba(119, 221, 119, 0.2); }
-    .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
-    .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
+    .row-alive { background: rgba(119, 221, 119, 0.25); }
 
     body.dark { background: #2c2c2c; color: #e0e0e0; }
     body.dark header { background: #111; color: white; }
     body.dark table { background: #3a3a3a; }
     body.dark th { background: #444; color: #f0f0f0; }
     body.dark td { border-bottom: 1px solid #555; }
-    body.dark .highlight-today { border-color: #b366ff; box-shadow: 0 0 10px rgba(179,102,255,0.7); }
-    body.dark .separator { border-color: #777; color: #ddd; }
 
     body.light { background: #f5f5f5; color: #222; }
     body.light header { background: #fff; color: #222; }
     body.light table { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     body.light th { background: #f0f0f0; color: #222; }
     body.light td { border-bottom: 1px solid #ddd; }
-    body.light .highlight-today { border-color: #ffcc66; box-shadow: 0 0 10px rgba(255, 204, 102, 0.7); }
-    body.light .separator { border-color: #bbb; color: #333; }
-
-    #nextRespawn.verysoon {
-      animation: glowPulse 1.5s infinite alternate;
-      text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
-    }
-    @keyframes glowPulse {
-      from { text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
-      to { text-shadow: 0 0 12px currentColor, 0 0 24px currentColor; }
-    }
 </style>
 </head>
 <body>
@@ -53,21 +38,15 @@
 <button id="themeToggle">🌙</button>
 </header>
 
-<h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
-<table class="highlight-today" id="fixedSoon" style="display:none;">
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-<tbody></tbody>
-</table>
-
 <h3 id="dynamicHeader">Dynamic Respawns</h3>
 <table id="upcoming">
 <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
 <tbody></tbody>
 </table>
 
-<h3 id="aliveHeader">Alive</h3>
-<table id="alive">
-<thead><tr><th>Boss</th><th>Status</th><th>Death Time</th><th>Respawn Time</th></tr></thead>
+<h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
+<table class="highlight-today" id="fixedSoon" style="display:none;">
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
 <tbody></tbody>
 </table>
 
@@ -80,11 +59,11 @@
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
+/* Only add (Alliance) to displayed name */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus","Neutro",
   "Lady Dalia","General Aquleus","Thymele","Amentis","Baron Braudmore"
 ]);
-
 function displayName(boss) {
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
@@ -110,7 +89,6 @@ const fixedSchedules = {
   "Chaiflock": [ { day: 6, hour: 22, minute: 0 } ],
   "Benji":     [ { day: 0, hour: 21, minute: 0 } ],
 
-  /* ⬇ New fixed bosses */
   "Icaruthia": [
     { day: 2, hour: 21, minute: 0 },
     { day: 5, hour: 21, minute: 0 }
@@ -125,8 +103,8 @@ const fixedSchedules = {
 };
 
 function formatDate(date) {
-  const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
-  return date.toLocaleString('en-US', options);
+  const opt = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+  return date.toLocaleString('en-US', opt);
 }
 function formatDateWithWeekday(date) {
   const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -154,7 +132,6 @@ function render() {
   const data = window.bossData || [];
   const now = new Date();
   let upcoming = [];
-  let alive = [];
   let fixedUpcoming = [];
 
   data.forEach(row => {
@@ -163,11 +140,7 @@ function render() {
     const hours = respawnTimes[boss];
     if (!hours || isNaN(death)) return;
     const respawn = new Date(death.getTime() + hours * 3600000);
-    if (respawn > now) {
-      upcoming.push({ boss, respawn });
-    } else {
-      alive.push({ boss, death, respawn });
-    }
+    upcoming.push({ boss, respawn });
   });
 
   Object.entries(fixedSchedules).forEach(([boss, schedules]) => {
@@ -183,15 +156,28 @@ function render() {
   upcoming.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
-  document.querySelector("#upcoming tbody").innerHTML =
-    upcoming.map(r =>
-      `<tr><td>${displayName(r.boss)}</td><td>Respawning</td><td>${formatDateWithWeekday(r.respawn)}</td><td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td></tr>`
-    ).join("");
+  /* DYNAMIC TABLE — fixed status logic */
+  document.querySelector("#upcoming tbody").innerHTML = upcoming.map(r => {
+    let diff = r.respawn - now;
+    let hours = diff / 3600000;
+    let statusText = "";
 
-  document.querySelector("#alive tbody").innerHTML =
-    alive.map(r =>
-      `<tr class="row-alive"><td>${displayName(r.boss)}</td><td>🟢 Alive</td><td>${formatDateWithWeekday(r.death)}</td><td>${formatDateWithWeekday(r.respawn)}</td></tr>`
-    ).join("");
+    if (diff <= 0)            statusText = "🟢 Alive";
+    else if (hours < 1)       statusText = "🔴 Very Soon";
+    else if (hours < 6)       statusText = "🟡 Soon";
+    else if (r.respawn.toDateString() === now.toDateString()) statusText = "⏳ Today";
+    else if (r.respawn.toDateString() === new Date(now.getTime() + 86400000).toDateString()) statusText = "📅 Tomorrow";
+    else                      statusText = "📌 Scheduled";
+
+    return `
+      <tr>
+        <td>${displayName(r.boss)}</td>
+        <td>${statusText}</td>
+        <td>${formatDateWithWeekday(r.respawn)}</td>
+        <td class="countdown" data-time="${r.respawn}">${formatCountdown(r.respawn)}</td>
+      </tr>
+    `;
+  }).join("");
 
   const soonFixed = fixedUpcoming.filter(r => r.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(r => r.respawn.toDateString() !== now.toDateString());
@@ -215,15 +201,15 @@ function render() {
     const next = allRespawns.sort((a,b) => a.respawn - b.respawn)[0];
     const banner = document.getElementById("nextRespawn");
 
-    function updateBanner() {
+    function rebanner() {
       banner.textContent = `${displayName(next.boss)} respawns in ${formatCountdown(next.respawn)} at ${formatDateWithWeekday(next.respawn)}`;
       document.querySelectorAll(".countdown").forEach(td => {
         td.textContent = formatCountdown(new Date(td.dataset.time));
       });
     }
     if (countdownInterval) clearInterval(countdownInterval);
-    updateBanner();
-    countdownInterval = setInterval(updateBanner, 1000);
+    rebanner();
+    countdownInterval = setInterval(rebanner, 1000);
   }
 }
 
@@ -232,7 +218,7 @@ setInterval(render, 60000);
 
 const themeToggleBtn = document.getElementById("themeToggle");
 function setTheme(theme) {
-  document.body.classList.remove("light", "dark");
+  document.body.classList.remove("light","dark");
   document.body.classList.add(theme);
   localStorage.setItem("theme", theme);
   themeToggleBtn.textContent = theme === "dark" ? "🌙" : "☀️";
