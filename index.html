@@ -187,7 +187,6 @@
 </main>
 
 <script>
-  // === CONFIG ===
   const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
   function normalizeBossName(name){
@@ -308,7 +307,7 @@
     }
   };
 
-  // --- Filter logic ---
+  // filter
   let filterMode = localStorage.getItem("filterMode") || "All";
   const factionFilterEl = document.getElementById("factionFilter");
   factionFilterEl.value = filterMode;
@@ -325,7 +324,7 @@
     return cfg.factions && cfg.factions.includes(filterMode);
   }
 
-  // --- Date helpers (Philippines timezone) ---
+  // time helpers
   function parseDeathTime(str){
     const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
     if (!m) return new Date(NaN);
@@ -364,7 +363,6 @@
     return `${h}h ${m}m ${s}s`;
   }
 
-  // --- Weekly occurrence for fixed bosses ---
   function getNextWeeklyOccurrence(day, hour, minute, now){
     const result = new Date(now);
     result.setSeconds(0,0);
@@ -375,13 +373,12 @@
 
     if (diff === 0) {
       if (result <= now) diff = 7;   // already passed today → next week
-      else diff = 0;                 // still later today
+      else diff = 0;                 // later today
     }
     result.setDate(result.getDate() + diff);
     return result;
   }
 
-  // --- Find config from sheet boss name (substring match, very tolerant) ---
   function findBossConfigFromSheetName(sheetName){
     const cleaned = normalizeBossName(sheetName);
     for (const cfg of Object.values(bossConfigs)){
@@ -405,7 +402,6 @@
     render();
   }
 
-  // --- Build dynamic respawns from sheet ---
   function buildDynamicRespawns(now){
     const latestDeaths = {};
 
@@ -436,45 +432,14 @@
     return list;
   }
 
-  // --- Build fixed respawns (pure config) ---
-  function buildFixedRespawns(now){
-    const fixed = [];
-    Object.values(bossConfigs).forEach(cfg=>{
-      if (cfg.type !== "fixed" || !cfg.schedules) return;
-      cfg.schedules.forEach(sch=>{
-        const respawn = getNextWeeklyOccurrence(sch.day, sch.hour, sch.minute, now);
-        fixed.push({ cfg, respawn });
-      });
-    });
-    return fixed;
-  }
-
   function render(){
     const now = new Date();
 
+    // --- dynamic ---
     const dynamicAll = buildDynamicRespawns(now)
       .filter(entry => passesFilter(entry.cfg))
       .sort((a,b)=>a.respawn - b.respawn);
 
-    const fixedAll = buildFixedRespawns(now)
-      .filter(entry => passesFilter(entry.cfg))
-      .sort((a,b)=>a.respawn - b.respawn);
-
-    const fixedToday = [];
-    const fixedOther = [];
-
-    const todayPH = now.toLocaleDateString("en-PH", { timeZone:"Asia/Manila" });
-
-    fixedAll.forEach(entry=>{
-      const dayPH = entry.respawn.toLocaleDateString("en-PH", { timeZone:"Asia/Manila" });
-      if (dayPH === todayPH){
-        fixedToday.push(entry);
-      } else {
-        fixedOther.push(entry);
-      }
-    });
-
-    // --- Render dynamic table ---
     const dynamicBody = document.querySelector("#dynamicTable tbody");
     dynamicBody.innerHTML = dynamicAll.map(entry=>{
       const diff = entry.respawn - now;
@@ -505,7 +470,38 @@
       `;
     }).join("");
 
-    // --- Render fixed today ---
+    // --- fixed: today vs other ---
+    const fixedToday = [];
+    const fixedOther = [];
+    const todayDOW = now.getDay();
+
+    Object.values(bossConfigs).forEach(cfg=>{
+      if (cfg.type !== "fixed" || !cfg.schedules) return;
+      if (!passesFilter(cfg)) return;
+
+      cfg.schedules.forEach(sch=>{
+        // Today's spawn (Option A – only future times)
+        if (sch.day === todayDOW){
+          const respawnToday = new Date(now);
+          respawnToday.setSeconds(0,0);
+          respawnToday.setHours(sch.hour, sch.minute, 0, 0);
+          if (respawnToday > now){
+            fixedToday.push({ cfg, respawn: respawnToday });
+          }
+        }
+
+        // Next upcoming (for "other" table)
+        const next = getNextWeeklyOccurrence(sch.day, sch.hour, sch.minute, now);
+        const isToday = next.toDateString() === now.toDateString();
+        if (!isToday){
+          fixedOther.push({ cfg, respawn: next });
+        }
+      });
+    });
+
+    fixedToday.sort((a,b)=>a.respawn - b.respawn);
+    fixedOther.sort((a,b)=>a.respawn - b.respawn);
+
     const fixedTodayBody = document.querySelector("#fixedToday tbody");
     fixedTodayBody.innerHTML = fixedToday.map(entry=>{
       return `
@@ -518,7 +514,6 @@
       `;
     }).join("");
 
-    // --- Render fixed other ---
     const fixedOtherBody = document.querySelector("#fixedOther tbody");
     fixedOtherBody.innerHTML = fixedOther.map(entry=>{
       return `
@@ -562,7 +557,7 @@
       }
     });
 
-    // remove past fixed-today rows (Option A behavior)
+    // remove past fixed-today rows (Option A)
     const nowTime = now.getTime();
     document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
       const time = Number(tr.dataset.time);
@@ -572,7 +567,6 @@
     });
   }
 
-  // --- Theme toggle ---
   const themeToggle = document.getElementById("themeToggle");
   function setTheme(mode){
     document.body.classList.remove("light","dark");
@@ -586,7 +580,6 @@
     setTheme(next);
   });
 
-  // --- Start ---
   fetchSheet();
   setInterval(fetchSheet, 60000);
 </script>
