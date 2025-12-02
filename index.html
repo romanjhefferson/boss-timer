@@ -7,35 +7,113 @@
 
 <style>
   :root{
-    --max-width:1000px;
+    --max-width:1400px; /* WIDE PC MODE */
   }
-  body{font-family:Arial, sans-serif;margin:0;padding:0;transition:background .3s,color .3s;}
-  header{display:flex;align-items:center;justify-content:center;gap:.8rem;padding:.8rem 1rem;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.2);}
-  #factionFilter{padding:.3rem .6rem;border-radius:4px;font-size:.9rem;}
-  #themeToggle{background:none;border:1px solid;border-radius:6px;padding:.3rem .8rem;cursor:pointer;font-size:1.1rem;}
+  body{
+    font-family:Arial, sans-serif;
+    margin:0;
+    padding:0;
+    transition:background .3s,color .3s;
+  }
 
-  main{padding:.5rem .5rem 2rem;max-width:var(--max-width);margin:0 auto;}
-  h3{margin-top:1.5rem;margin-bottom:.5rem;}
+  /* Header */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.8rem;
+    padding:.8rem 1rem;
+    position:sticky;
+    top:0;
+    z-index:10;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
+  }
+  #factionFilter{
+    padding:.3rem .6rem;
+    border-radius:4px;
+    font-size:.9rem;
+  }
+  #themeToggle{
+    background:none;
+    border:1px solid;
+    border-radius:6px;
+    padding:.3rem .8rem;
+    cursor:pointer;
+    font-size:1.1rem;
+  }
 
-  .table-wrapper{width:100%;overflow-x:auto;}
-  table{width:100%;border-collapse:collapse;margin:.3rem 0 1rem;border-radius:8px;overflow:hidden;min-width:480px;}
-  th,td{padding:.6rem .75rem;text-align:left;font-size:.9rem;white-space:nowrap;}
-  /* NOTE: removed sticky header to avoid PC blank-gap glitch */
-  th{background:rgba(0,0,0,0.08);} 
-  td{border-bottom:1px solid rgba(0,0,0,.2);}
+  main{
+    padding:.5rem .5rem 2rem;
+    max-width:var(--max-width);
+    margin:0 auto;
+  }
 
-  .highlight-today{border:2px solid;box-shadow:0 0 8px rgba(0,0,0,.35);}
-  .separator{text-align:center;font-weight:bold;margin:1.5rem 0 .7rem;padding:.4rem;border-top:2px solid #ccc;border-bottom:2px solid #ccc;opacity:.85;}
+  h3{
+    margin-top:1.5rem;
+    margin-bottom:.5rem;
+  }
 
-  body.dark{background:#2c2c2c;color:#e0e0e0;}
+  .table-wrapper{
+    width:100%;
+    overflow-x:auto;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:.3rem 0 1rem;
+    border-radius:8px;
+    overflow:hidden;
+    min-width:500px;
+  }
+
+  th,td{
+    padding:.6rem .75rem;
+    text-align:left;
+    font-size:.9rem;
+    white-space:nowrap;
+  }
+
+  th{
+    font-weight:700;
+    background:rgba(0,0,0,.08);
+  }
+
+  td{
+    border-bottom:1px solid rgba(0,0,0,.2);
+  }
+
+  .highlight-today{
+    border:2px solid;
+    box-shadow:0 0 8px rgba(0,0,0,.35);
+  }
+
+  .separator{
+    text-align:center;
+    font-weight:bold;
+    margin:1.5rem 0 .7rem;
+    padding:.4rem;
+    border-top:2px solid #ccc;
+    border-bottom:2px solid #ccc;
+    opacity:.85;
+  }
+
+  /* Dark Theme */
+  body.dark{
+    background:#2c2c2c;
+    color:#e0e0e0;
+  }
   body.dark header{background:#111;}
-  body.dark main{color:#e0e0e0;}
   body.dark table{background:#3a3a3a;}
   body.dark th{background:#444;}
   body.dark td{border-bottom:1px solid #555;}
   body.dark .separator{border-color:#777;color:#ddd;}
 
-  body.light{background:#f5f5f5;color:#222;}
+  /* Light Theme */
+  body.light{
+    background:#f5f5f5;
+    color:#222;
+  }
   body.light header{background:#fff;}
   body.light table{background:white;box-shadow:0 2px 6px rgba(0,0,0,.20);}
   body.light th{background:#f0f0f0;}
@@ -43,13 +121,18 @@
   body.light .separator{border-color:#bbb;color:#333;}
 
   @media(max-width:600px){
-    header{flex-direction:column;gap:.55rem;}
-    #factionFilter,#themeToggle{width:70%;font-size:.9rem;}
-    table{min-width:420px;}
+    header{
+      flex-direction:column;
+      gap:.55rem;
+    }
+    #factionFilter,#themeToggle{
+      width:70%;
+      font-size:.9rem;
+    }
+    table{
+      min-width:420px;
+    }
   }
-
-  /* small visual improvement for thead */
-  thead th{font-weight:700;letter-spacing:.2px;}
 </style>
 </head>
 <body>
@@ -64,32 +147,49 @@
 </header>
 
 <main>
+  <!-- FIXED RESPAWNS TODAY -->
   <h3>⚡ Fixed Respawns Today</h3>
   <div class="table-wrapper">
     <table class="highlight-today" id="fixedToday">
       <thead>
-        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+        <tr>
+          <th>Boss</th>
+          <th>Status</th>
+          <th>Respawn Time</th>
+          <th>Countdown</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
+  <!-- DYNAMIC RESPAWNS -->
   <h3>Dynamic Respawns</h3>
   <div class="table-wrapper">
     <table id="dynamicTable">
       <thead>
-        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+        <tr>
+          <th>Boss</th>
+          <th>Status</th>
+          <th>Respawn Time</th>
+          <th>Countdown</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
+  <!-- OTHER UPCOMING FIXED RESPAWNS -->
   <div class="separator" id="fixedSeparator" style="display:none;">──── Other Fixed Respawns ────</div>
-
   <div class="table-wrapper">
     <table id="fixedOther">
       <thead>
-        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
+        <tr>
+          <th>Boss</th>
+          <th>Status</th>
+          <th>Respawn Time</th>
+          <th>Countdown</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -97,11 +197,66 @@
 </main>
 
 <script>
-/* ---------- CONFIG ---------- */
-const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+/* ---------------- UTILITIES ---------------- */
 
-/* boss configs (names shown to user) */
+function normalizeBossName(name){
+  return String(name || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g,"")
+    .replace(/\s+/g," ")
+    .trim()
+    .toLowerCase();
+}
+
+function parseDeathTime(str){
+  const m = String(str || "").trim().match(
+    /(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/
+  );
+  if (!m) return new Date(NaN);
+  const [,MM,DD,YYYY,hh,mm] = m.map(Number);
+  return new Date(YYYY,MM-1,DD,hh,mm);
+}
+
+function formatDatePH(d){
+  return d.toLocaleString("en-US",{
+    timeZone:"Asia/Manila",
+    month:"short",
+    day:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  });
+}
+
+function formatDateWithWeekdayPH(d){
+  return `${formatDatePH(d)} (${d.toLocaleDateString("en-US",{weekday:"long"})})`;
+}
+
+function formatCountdown(t){
+  const now = new Date();
+  const diff = t - now;
+  if (diff <= 0) return "Now!";
+  const s = Math.floor(diff/1000);
+  const h = Math.floor(s/3600);
+  const m = Math.floor((s%3600)/60);
+  const sec = s%60;
+  return `${h}h ${m}m ${sec}s`;
+}
+
+function getNextWeeklyOccurrence(day,hour,minute,now){
+  const d = new Date(now);
+  d.setSeconds(0,0);
+  d.setHours(hour,minute,0,0);
+  let diff = (day - d.getDay() + 7) % 7;
+  if (diff === 0 && d <= now) diff = 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+/* ---------------- BOSS CONFIG ---------------- */
+
 const bossConfigs = {
+  /* Alliance dynamic */
   "venatus":{name:"Venatus",factions:["Alliance"],type:"dynamic",respawnHours:10},
   "viorent":{name:"Viorent",factions:["Alliance"],type:"dynamic",respawnHours:10},
   "ego":{name:"Ego",factions:["Alliance"],type:"dynamic",respawnHours:21},
@@ -113,6 +268,7 @@ const bossConfigs = {
   "amentis":{name:"Amentis",factions:["Alliance"],type:"dynamic",respawnHours:29},
   "baron braudmore":{name:"Baron Braudmore",factions:["Alliance"],type:"dynamic",respawnHours:32},
 
+  /* Alliance fixed */
   "clemantis":{name:"Clemantis",factions:["Alliance"],type:"fixed",schedules:[
     {day:1,hour:11,minute:30},{day:4,hour:19,minute:0}]},
   "saphirus":{name:"Saphirus",factions:["Alliance"],type:"fixed",schedules:[
@@ -122,6 +278,7 @@ const bossConfigs = {
   "thymele":{name:"Thymele",factions:["Alliance"],type:"fixed",schedules:[
     {day:1,hour:19,minute:0},{day:3,hour:11,minute:30}]},
 
+  /* BloodMoon dynamic */
   "wannitas":{name:"Wannitas",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
   "metus":{name:"Metus",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
   "duplican":{name:"Duplican",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
@@ -135,6 +292,7 @@ const bossConfigs = {
   "asta":{name:"Asta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
   "supore":{name:"Supore",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
 
+  /* BloodMoon fixed */
   "milavy":{name:"Milavy",factions:["BloodMoon"],type:"fixed",schedules:[
     {day:6,hour:15,minute:0}]},
   "ringor":{name:"Ringor",factions:["BloodMoon"],type:"fixed",schedules:[
@@ -148,6 +306,7 @@ const bossConfigs = {
   "benji":{name:"Benji",factions:["BloodMoon"],type:"fixed",schedules:[
     {day:0,hour:21,minute:0}]},
 
+  /* Shared Alliance + BloodMoon */
   "icaruthia":{name:"Icaruthia",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
     {day:2,hour:21,minute:0},{day:5,hour:21,minute:0}]},
   "motti":{name:"Motti",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
@@ -156,16 +315,7 @@ const bossConfigs = {
     {day:0,hour:22,minute:0}]}
 };
 
-/* ---------- utilities ---------- */
-function normalizeBossName(name){
-  return String(name || "")
-    .normalize("NFKC")
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
+/* -------- MATCHING FUNCTION ------- */
 function findConfig(sheetName){
   const cleaned = normalizeBossName(sheetName);
   for (const cfg of Object.values(bossConfigs)){
@@ -174,138 +324,209 @@ function findConfig(sheetName){
   return null;
 }
 
-function parseDeathTime(str){
-  const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
-  if (!m) return new Date(NaN);
-  const [, MM, DD, YYYY, hh, mm] = m.map(Number);
-  return new Date(YYYY, MM-1, DD, hh, mm);
-}
-
-function formatDatePH(d){
-  return d.toLocaleString("en-US", { timeZone:"Asia/Manila", month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
-}
-function formatDateWithWeekdayPH(d){
-  const main = formatDatePH(d);
-  const weekday = d.toLocaleDateString("en-US",{ timeZone:"Asia/Manila", weekday:"long" });
-  return `${main} (${weekday})`;
-}
-function formatCountdown(target){
-  const now = new Date(); const diff = target - now;
-  if (diff <= 0) return "Now!";
-  const ts = Math.floor(diff/1000);
-  const h = Math.floor(ts/3600); const m = Math.floor((ts%3600)/60); const s = ts%60;
-  return `${h}h ${m}m ${s}s`;
-}
-
-function getNextWeeklyOccurrence(day,hour,minute,now){
-  const result = new Date(now);
-  result.setSeconds(0,0); result.setHours(hour,minute,0,0);
-  let diff = (day - result.getDay() + 7)%7;
-  if (diff === 0 && result <= now) diff = 7;
-  result.setDate(result.getDate() + diff);
-  return result;
-}
-
-/* ---------- filter & theme ---------- */
+/* -------- FILTER MODE ------- */
 let filterMode = localStorage.getItem("filterMode") || "All";
-const factionFilterEl = document.getElementById("factionFilter");
-factionFilterEl.value = filterMode;
-factionFilterEl.addEventListener("change", e=>{ filterMode = e.target.value; localStorage.setItem("filterMode", filterMode); render(); });
-function passesFilter(cfg){ if (!cfg) return false; if (filterMode === "All") return true; return cfg.factions && cfg.factions.includes(filterMode); }
+document.getElementById("factionFilter").value = filterMode;
 
-const themeToggle = document.getElementById("themeToggle");
-function setTheme(mode){ document.body.classList.remove("light","dark"); document.body.classList.add(mode); localStorage.setItem("theme", mode); themeToggle.textContent = mode === "dark" ? "🌙" : "☀️"; }
+document.getElementById("factionFilter").addEventListener("change", e=>{
+  filterMode = e.target.value;
+  localStorage.setItem("filterMode", filterMode);
+  render();
+});
+
+function passesFilter(cfg){
+  if (!cfg) return false;
+  if (filterMode === "All") return true;
+  return cfg.factions.includes(filterMode);
+}
+
+/* -------- THEME MODE -------- */
+function setTheme(mode){
+  document.body.classList.remove("light","dark");
+  document.body.classList.add(mode);
+  localStorage.setItem("theme", mode);
+  document.getElementById("themeToggle").textContent = mode === "dark" ? "🌙" : "☀️";
+}
+
 setTheme(localStorage.getItem("theme") || "dark");
-themeToggle.addEventListener("click", ()=> setTheme(document.body.classList.contains("dark") ? "light" : "dark"));
 
-/* ---------- sheet fetching & render ---------- */
-let rows = []; let countdownTimer = null;
-async function fetchSheet(){ try { const res = await fetch(sheetURL); rows = await res.json(); } catch(e){ rows = []; } render(); }
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  setTheme(document.body.classList.contains("dark") ? "light" : "dark");
+});
+
+/* -------- FETCH SHEET -------- */
+let rows = [];
+let countdownTimer = null;
+
+async function fetchSheet(){
+  try{
+    const res = await fetch("https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1");
+    rows = await res.json();
+  }catch{
+    rows = [];
+  }
+  render();
+}
+
+/* -------- BUILD DYNAMIC LIST -------- */
 function buildDynamic(now){
-  const last = {};
+  const latest = {};
+
   rows.forEach(r=>{
     const cfg = findConfig(r.Boss);
     if (!cfg || cfg.type !== "dynamic" || !r.DeathTime) return;
-    const d = parseDeathTime(r.DeathTime); if (isNaN(d)) return;
+    const death = parseDeathTime(r.DeathTime);
+    if (isNaN(death)) return;
+
     const key = normalizeBossName(cfg.name);
-    if (!last[key] || d > last[key]) last[key] = d;
+    if (!latest[key] || death > latest[key]) latest[key] = death;
   });
-  const list = [];
-  Object.entries(last).forEach(([k,death])=>{
-    const cfg = Object.values(bossConfigs).find(c=>normalizeBossName(c.name)===k);
+
+  const output = [];
+  Object.entries(latest).forEach(([key, death])=>{
+    const cfg = Object.values(bossConfigs).find(
+      c => normalizeBossName(c.name) === key
+    );
     if (!cfg) return;
-    const respawn = new Date(death.getTime() + cfg.respawnHours*3600000);
-    list.push({cfg,respawn});
+    const respawn = new Date(death.getTime() + cfg.respawnHours * 3600000);
+    output.push({cfg, respawn});
   });
-  return list;
+
+  return output;
 }
 
+/* -------- RENDER -------- */
 function render(){
   const now = new Date();
 
-  // dynamic
-  const dyn = buildDynamic(now).filter(x=>passesFilter(x.cfg)).sort((a,b)=>a.respawn-b.respawn);
-  const dynBody = document.querySelector("#dynamicTable tbody"); dynBody.innerHTML = "";
+  /* Dynamic Respawns */
+  const dyn = buildDynamic(now)
+    .filter(x => passesFilter(x.cfg))
+    .sort((a,b)=>a.respawn-b.respawn);
+
+  const dynBody = document.querySelector("#dynamicTable tbody");
+  dynBody.innerHTML = "";
+
   dyn.forEach(x=>{
-    const diff = x.respawn - now; const hrs = diff/3600000;
+    const diff = x.respawn - now;
+    const hrs = diff / 3600000;
     let status;
-    if (diff <= 0) status = "🟢 Alive"; else if (hrs < 1) status = "🔴 Very Soon"; else if (hrs < 6) status = "🟡 Soon";
-    else { const t = x.respawn.toDateString(); status = (t === now.toDateString()) ? "⏳ Today" : "📌 Scheduled"; }
-    dynBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>${status}</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`);
+
+    if (diff <= 0) status = "🟢 Alive";
+    else if (hrs < 1) status = "🔴 Very Soon";
+    else if (hrs < 6) status = "🟡 Soon";
+    else status = (x.respawn.toDateString() === now.toDateString()) ? "⏳ Today" : "📌 Scheduled";
+
+    dynBody.insertAdjacentHTML("beforeend", `
+      <tr data-time="${x.respawn.getTime()}">
+        <td>${x.cfg.name}</td>
+        <td>${status}</td>
+        <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+        <td class="countdown">${formatCountdown(x.respawn)}</td>
+      </tr>
+    `);
   });
 
-  // fixed today / other
-  const todayDOW = now.getDay(); const fixedToday = []; const fixedOther = [];
+  /* Fixed Respawns Today + Other Fixed Respawns */
+  const today = now.getDay();
+  const fixedToday = [];
+  const fixedOther = [];
+
   Object.values(bossConfigs).forEach(cfg=>{
     if (cfg.type !== "fixed" || !passesFilter(cfg)) return;
+
     cfg.schedules.forEach(s=>{
-      // today's upcoming
-      if (s.day === todayDOW){
-        const t = new Date(now); t.setSeconds(0,0); t.setHours(s.hour,s.minute,0,0);
-        if (t > now) fixedToday.push({cfg,respawn:t});
+      if (s.day === today){
+        const t = new Date(now);
+        t.setSeconds(0,0);
+        t.setHours(s.hour,s.minute,0,0);
+        if (t > now) fixedToday.push({cfg, respawn:t});
       }
-      // next occurrence
-      const next = getNextWeeklyOccurrence(s.day,s.hour,s.minute,now);
-      if (next.toDateString() !== now.toDateString()) fixedOther.push({cfg,respawn:next});
+
+      const next = getNextWeeklyOccurrence(s.day, s.hour, s.minute, now);
+      if (next.toDateString() !== now.toDateString()) fixedOther.push({cfg, respawn:next});
     });
   });
 
   fixedToday.sort((a,b)=>a.respawn-b.respawn);
   fixedOther.sort((a,b)=>a.respawn-b.respawn);
 
-  const ftBody = document.querySelector("#fixedToday tbody"); ftBody.innerHTML = "";
-  fixedToday.forEach(x=> ftBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>⚡ Today</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`));
+  /* Render fixed today */
+  const ftBody = document.querySelector("#fixedToday tbody");
+  ftBody.innerHTML = "";
 
-  const foBody = document.querySelector("#fixedOther tbody"); foBody.innerHTML = "";
-  fixedOther.forEach(x=> foBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>Scheduled</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`));
+  fixedToday.forEach(x=>{
+    ftBody.insertAdjacentHTML("beforeend", `
+      <tr data-time="${x.respawn.getTime()}">
+        <td>${x.cfg.name}</td>
+        <td>⚡ Today</td>
+        <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+        <td class="countdown">${formatCountdown(x.respawn)}</td>
+      </tr>
+    `);
+  });
 
-  document.getElementById("fixedSeparator").style.display = fixedOther.length ? "block" : "none";
+  /* Render other fixed */
+  const foBody = document.querySelector("#fixedOther tbody");
+  foBody.innerHTML = "";
 
+  fixedOther.forEach(x=>{
+    foBody.insertAdjacentHTML("beforeend", `
+      <tr data-time="${x.respawn.getTime()}">
+        <td>${x.cfg.name}</td>
+        <td>Scheduled</td>
+        <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+        <td class="countdown">${formatCountdown(x.respawn)}</td>
+      </tr>
+    `);
+  });
+
+  document.getElementById("fixedSeparator").style.display =
+    fixedOther.length ? "block" : "none";
+
+  /* Restart countdown loop */
   if (countdownTimer) clearInterval(countdownTimer);
   updateCountdowns();
   countdownTimer = setInterval(updateCountdowns, 1000);
 }
 
+/* -------- UPDATE COUNTDOWNS -------- */
 function updateCountdowns(){
   const now = new Date();
+
   document.querySelectorAll(".countdown").forEach(td=>{
-    const tr = td.closest("tr"); if (!tr) return;
-    const t = new Date(Number(tr.dataset.time)); td.textContent = formatCountdown(t);
-    td.style.fontWeight = "normal"; td.style.color = "";
-    const diff = t - now;
+    const tr = td.closest("tr");
+    const respawn = new Date(Number(tr.dataset.time));
+    td.textContent = formatCountdown(respawn);
+
+    const diff = respawn - now;
+    td.style.color = "";
+    td.style.fontWeight = "normal";
+
     if (diff > 0){
-      const h = diff/3600000;
-      if (h < 1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
-      else if (h < 6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
+      const hrs = diff / 3600000;
+      if (hrs < 1){
+        td.style.color = "#ff4c4c";
+        td.style.fontWeight = "bold";
+      } else if (hrs < 6){
+        td.style.color = "#ffd700";
+        td.style.fontWeight = "bold";
+      }
     }
   });
+
+  /* Remove expired "today" fixed respawns immediately */
   const nowTime = now.getTime();
-  document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{ if (Number(tr.dataset.time) <= nowTime) tr.remove(); });
+  document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
+    if (Number(tr.dataset.time) <= nowTime) tr.remove();
+  });
 }
 
-/* start */
-fetchSheet(); setInterval(fetchSheet, 60000);
+/* -------- START -------- */
+fetchSheet();
+setInterval(fetchSheet, 60000); /* refresh sheet every minute */
 
 </script>
+
 </body>
 </html>
