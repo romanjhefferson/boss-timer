@@ -71,6 +71,7 @@
     position: sticky;
     top: 3.1rem;
     z-index: 5;
+    line-height: 1.2;
   }
   td {
     border-bottom: 1px solid rgba(0,0,0,.2);
@@ -307,7 +308,6 @@
     }
   };
 
-  // filter
   let filterMode = localStorage.getItem("filterMode") || "All";
   const factionFilterEl = document.getElementById("factionFilter");
   factionFilterEl.value = filterMode;
@@ -324,7 +324,6 @@
     return cfg.factions && cfg.factions.includes(filterMode);
   }
 
-  // time helpers
   function parseDeathTime(str){
     const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
     if (!m) return new Date(NaN);
@@ -441,7 +440,8 @@
       .sort((a,b)=>a.respawn - b.respawn);
 
     const dynamicBody = document.querySelector("#dynamicTable tbody");
-    dynamicBody.innerHTML = dynamicAll.map(entry=>{
+    dynamicBody.innerHTML = "";
+    dynamicAll.forEach(entry=>{
       const diff = entry.respawn - now;
       const hours = diff / 3600000;
       let status;
@@ -460,15 +460,15 @@
         else status = "📌 Scheduled";
       }
 
-      return `
+      dynamicBody.insertAdjacentHTML("beforeend", `
         <tr data-time="${entry.respawn.getTime()}">
           <td>${entry.cfg.name}</td>
           <td>${status}</td>
           <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
           <td class="countdown">${formatCountdown(entry.respawn)}</td>
         </tr>
-      `;
-    }).join("");
+      `);
+    });
 
     // --- fixed: today vs other ---
     const fixedToday = [];
@@ -480,7 +480,7 @@
       if (!passesFilter(cfg)) return;
 
       cfg.schedules.forEach(sch=>{
-        // Today's spawn (Option A – only future times)
+        // today's upcoming spawns
         if (sch.day === todayDOW){
           const respawnToday = new Date(now);
           respawnToday.setSeconds(0,0);
@@ -490,7 +490,7 @@
           }
         }
 
-        // Next upcoming (for "other" table)
+        // next weekly occurrence for "other"
         const next = getNextWeeklyOccurrence(sch.day, sch.hour, sch.minute, now);
         const isToday = next.toDateString() === now.toDateString();
         if (!isToday){
@@ -503,28 +503,30 @@
     fixedOther.sort((a,b)=>a.respawn - b.respawn);
 
     const fixedTodayBody = document.querySelector("#fixedToday tbody");
-    fixedTodayBody.innerHTML = fixedToday.map(entry=>{
-      return `
+    fixedTodayBody.innerHTML = "";
+    fixedToday.forEach(entry=>{
+      fixedTodayBody.insertAdjacentHTML("beforeend", `
         <tr data-time="${entry.respawn.getTime()}">
           <td>${entry.cfg.name}</td>
           <td>⚡ Today</td>
           <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
           <td class="countdown">${formatCountdown(entry.respawn)}</td>
         </tr>
-      `;
-    }).join("");
+      `);
+    });
 
     const fixedOtherBody = document.querySelector("#fixedOther tbody");
-    fixedOtherBody.innerHTML = fixedOther.map(entry=>{
-      return `
+    fixedOtherBody.innerHTML = "";
+    fixedOther.forEach(entry=>{
+      fixedOtherBody.insertAdjacentHTML("beforeend", `
         <tr data-time="${entry.respawn.getTime()}">
           <td>${entry.cfg.name}</td>
           <td>Scheduled</td>
           <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
           <td class="countdown">${formatCountdown(entry.respawn)}</td>
         </tr>
-      `;
-    }).join("");
+      `);
+    });
 
     document.getElementById("fixedSeparator").style.display =
       fixedOther.length ? "block" : "none";
@@ -557,7 +559,6 @@
       }
     });
 
-    // remove past fixed-today rows (Option A)
     const nowTime = now.getTime();
     document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
       const time = Number(tr.dataset.time);
