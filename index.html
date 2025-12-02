@@ -71,6 +71,23 @@ tbody td{ border-bottom:1px solid rgba(0,0,0,0.06); }
 /* Hover */
 tbody tr:hover { background: rgba(0,0,0,0.03); }
 
+/* ---------------- ZEBRA ROWS ---------------- */
+/* Light Mode */
+body.light table tbody tr:nth-child(odd) {
+  background: rgba(0,0,0,0.04);
+}
+body.light table tbody tr:nth-child(even) {
+  background: rgba(0,0,0,0.08);
+}
+
+/* Dark Mode */
+body.dark table tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,0.04);
+}
+body.dark table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.07);
+}
+
 /* ---------------- CLEAN STATUS LABEL ---------------- */
 .status-pill {
   font-weight:600;
@@ -80,6 +97,39 @@ tbody tr:hover { background: rgba(0,0,0,0.03); }
   background:none !important;
   border:none;
   color:inherit !important;
+}
+
+/* ---------------- ROW TEXT COLORS (NO BACKGROUNDS) ---------------- */
+/* remove background highlight; use text color instead */
+
+/* Amber (for <6 hours) - readable in dark and light */
+.row-soon td,
+.row-soon .status-pill {
+  color: #ffb300 !important;      /* amber for default */
+  -webkit-text-stroke: 0.0px transparent; /* prevent thin artifacts */
+}
+
+/* Slightly darker amber for light mode so it doesn't wash out */
+body.light .row-soon td,
+body.light .row-soon .status-pill {
+  color: #b36b00 !important;
+}
+
+/* Red (for <1 hour) - readable in dark and light */
+.row-verysoon td,
+.row-verysoon .status-pill {
+  color: #ff6b6b !important; /* soft red default */
+}
+
+/* Slightly darker red for light mode */
+body.light .row-verysoon td,
+body.light .row-verysoon .status-pill {
+  color: #b33a3a !important;
+}
+
+/* Ensure links, small elements inherit row color */
+.row-soon a, .row-verysoon a {
+  color: inherit !important;
 }
 
 /* ---------------- ICON SPACING ---------------- */
@@ -106,9 +156,12 @@ tbody tr:hover { background: rgba(0,0,0,0.03); }
 }
 
 /* ---------------- DARK MODE ---------------- */
-body.dark{ background:#111217; color:#e6eef8; }
+body.dark{
+  background:#1d1f24; /* softer dark grey */
+  color:#e6eef8;
+}
 body.dark thead th{ background:rgba(255,255,255,0.05); }
-body.dark table{ background:#15161c; }
+body.dark table{ background:#23252b; }
 body.dark tbody td{ border-bottom:1px solid rgba(255,255,255,0.04); }
 
 /* ---------------- LIGHT MODE ---------------- */
@@ -180,7 +233,7 @@ body.light table{ background:#fff; }
 const sheetURL =
   "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* ---------------- Normalizers ---------------- */
+/* ---------------- Helpers ---------------- */
 function normalize(str){
   return String(str||"")
     .normalize("NFKC")
@@ -279,7 +332,7 @@ const bossConfigs = {
     {d:0,h:22,m:0}]}
 };
 
-/* ICONS ONLY */
+/* ICON DISPLAY */
 function displayName(cfg){
   if(!cfg) return "";
   const f = cfg.f;
@@ -290,7 +343,7 @@ function displayName(cfg){
   return cfg.name;
 }
 
-/* --------------- SHEET MATCH ---------------- */
+/* FIND MATCHED CONFIG */
 function findCfg(sheetName){
   const key = normalize(sheetName);
   for(const cfg of Object.values(bossConfigs)){
@@ -299,7 +352,7 @@ function findCfg(sheetName){
   return null;
 }
 
-/* ------------ FILTER ------------- */
+/* FILTER */
 let filterMode = localStorage.getItem("filterMode") || "All";
 document.getElementById("factionFilter").value = filterMode;
 
@@ -315,7 +368,7 @@ document.getElementById("factionFilter").addEventListener("change",e=>{
   render();
 });
 
-/* ------------ THEME ------------- */
+/* THEME */
 function setTheme(x){
   document.body.classList.remove("dark","light");
   document.body.classList.add(x);
@@ -329,7 +382,7 @@ document.getElementById("themeToggle").addEventListener("click",()=>{
   setTheme(document.body.classList.contains("dark") ? "light" : "dark");
 });
 
-/* ------------ FETCH ------------ */
+/* FETCH */
 let rows = [];
 
 async function loadSheet(){
@@ -341,7 +394,7 @@ async function loadSheet(){
 }
 setInterval(loadSheet,60000);
 
-/* ------------ BUILD DYNAMIC ------------ */
+/* BUILD DYNAMIC */
 function buildDynamic(){
   const latest = {};
   rows.forEach(r=>{
@@ -361,11 +414,11 @@ function buildDynamic(){
   });
 }
 
-/* ------------ RENDER ------------ */
+/* RENDER */
 function render(){
   const now = new Date();
 
-  /* Dynamic */
+  /* DYNAMIC ---------------------- */
   const dyn = buildDynamic()
     .filter(x=>passFilter(x.cfg))
     .sort((a,b)=>a.resp-b.resp);
@@ -375,14 +428,25 @@ function render(){
 
   dyn.forEach(x=>{
     const diff = x.resp - now;
+    const hours = diff / 3600000;
+
     let st = "📌 Scheduled";
-    if(diff<=0) st="🟢 Alive";
-    else if(diff/3600000 < 1) st="⏳ Very Soon";
-    else if(diff/3600000 < 6) st="🕒 Soon";
-    else if(x.resp.toDateString()===now.toDateString()) st="⚡ Today";
+    let rowClass = "";
+
+    if (diff <= 0) {
+        st = "🟢 Alive";
+    } else if (hours < 1) {
+        st = "⏳ Very Soon";
+        rowClass = "row-verysoon";
+    } else if (hours < 6) {
+        st = "🕒 Soon";
+        rowClass = "row-soon";
+    } else if (x.resp.toDateString() === now.toDateString()) {
+        st = "⚡ Today";
+    }
 
     dynBody.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}">
+      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
         <td>${displayName(x.cfg)}</td>
         <td><span class="status-pill">${st}</span></td>
         <td>${formatFullPH(x.resp)}</td>
@@ -391,7 +455,7 @@ function render(){
     `);
   });
 
-  /* Fixed */
+  /* FIXED TODAY ------------------ */
   const today = now.getDay();
   const fToday=[], fOther=[];
 
@@ -402,12 +466,10 @@ function render(){
       rt.setSeconds(0,0);
       rt.setHours(s.h,s.m,0,0);
 
-      // today upcoming
       if(s.d===today && rt>now){
         fToday.push({cfg,resp:rt});
       }
 
-      // next occurrence (other days)
       const nxt = nextWeekly(s.d,s.h,s.m);
       if(nxt.toDateString()!==now.toDateString()){
         fOther.push({cfg,resp:nxt});
@@ -421,8 +483,15 @@ function render(){
   const ft = document.querySelector("#fixedToday tbody");
   ft.innerHTML="";
   fToday.forEach(x=>{
+    const diffFT = x.resp - now;
+    const hFT = diffFT / 3600000;
+    let rowClassFT = "";
+
+    if (diffFT > 0 && hFT < 1) rowClassFT = "row-verysoon";
+    else if (diffFT > 0 && hFT < 6) rowClassFT = "row-soon";
+
     ft.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}">
+      <tr data-t="${x.resp.getTime()}" class="${rowClassFT}">
         <td>${displayName(x.cfg)}</td>
         <td><span class="status-pill">⚡ Today</span></td>
         <td>${formatFullPH(x.resp)}</td>
@@ -431,11 +500,19 @@ function render(){
     `);
   });
 
+  /* FIXED OTHER ------------------ */
   const fo = document.querySelector("#fixedOther tbody");
   fo.innerHTML="";
   fOther.forEach(x=>{
+    const diffFO = x.resp - now;
+    const hFO = diffFO / 3600000;
+    let rowClassFO = "";
+
+    if (diffFO > 0 && hFO < 1) rowClassFO = "row-verysoon";
+    else if (diffFO > 0 && hFO < 6) rowClassFO = "row-soon";
+
     fo.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}">
+      <tr data-t="${x.resp.getTime()}" class="${rowClassFO}">
         <td>${displayName(x.cfg)}</td>
         <td><span class="status-pill">📌 Scheduled</span></td>
         <td>${formatFullPH(x.resp)}</td>
@@ -452,7 +529,7 @@ function render(){
   window._cdInt=setInterval(updateCountdowns,1000);
 }
 
-/* ------------ UPDATE COUNTDOWNS ------------ */
+/* UPDATE COUNTDOWNS */
 function updateCountdowns(){
   const now = new Date();
   document.querySelectorAll("td.cd").forEach(td=>{
@@ -461,20 +538,19 @@ function updateCountdowns(){
     td.textContent = countdown(t);
   });
 
-  // remove expired “Today”
   document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
     if(Number(tr.dataset.t) <= Date.now()) tr.remove();
   });
 }
 
-/* ------------ SCROLL BUTTON ------------ */
+/* SCROLL BUTTON */
 const scrollBtn=document.getElementById("scrollTopBtn");
 window.addEventListener("scroll",()=>{
   scrollBtn.style.display = window.scrollY>300 ? "flex":"none";
 });
 scrollBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
 
-/* ------------ START ------------ */
+/* START */
 loadSheet();
 </script>
 
