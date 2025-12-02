@@ -88,6 +88,7 @@ function passesFilter(boss){
   if(filterMode==="Alliance")return isAlliance;
   if(filterMode==="BloodMoon")return !isAlliance;
 }
+
 function formatDate(d){ return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}); }
 function formatDateWithWeekday(d){ return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`; }
 function formatCountdown(t){
@@ -96,6 +97,7 @@ function formatCountdown(t){
   const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
   return `${h}h ${m}m ${s}s`;
 }
+
 const respawnTimes={
   "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
@@ -161,9 +163,9 @@ function render(){
       </tr>`;
     }).join("");
 
-  const todayFixed = fixedUpcoming.filter(f => {
+  const todayFixed = fixedUpcoming.filter(f=>{
     const diff=f.respawn-now;
-    return f.respawn.toDateString()===now.toDateString() && diff>0;
+    return diff>0 && diff < 24*3600*1000; // timezone-safe "today"
   });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
@@ -176,7 +178,11 @@ function render(){
       </tr>
     `).join("");
 
-  const laterFixed = fixedUpcoming.filter(f => f.respawn.toDateString()!==now.toDateString());
+  const laterFixed = fixedUpcoming.filter(f=>{
+    const diff=f.respawn-now;
+    return diff >= 24*3600*1000;
+  });
+
   document.querySelector("#fixed tbody").innerHTML =
     laterFixed.map(r=>`
       <tr data-time="${r.respawn.getTime()}">
@@ -197,21 +203,15 @@ function render(){
 function applyCountdownStyles(){
   const now=new Date();
   document.querySelectorAll(".countdown").forEach(td=>{
-    const row=td.closest("tr"), t=new Date(Number(row.dataset.time));
-    const diff=t-now, h=diff/3600000;
-
+    const t=new Date(Number(td.closest("tr").dataset.time)), diff=t-now, h=diff/3600000;
     if(diff>0) td.textContent=formatCountdown(t);
     else td.textContent="Now!";
-
     td.style.fontWeight="normal"; td.style.color="";
-
     if(diff>0){
       if(h<1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
       else if(h<6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
     }
   });
-
-  // remove expired fixed rows instantly
   document.querySelectorAll("#fixedSoon tbody tr").forEach(row=>{
     const t=new Date(Number(row.dataset.time));
     if(t-now <= 0) row.remove();
@@ -221,7 +221,6 @@ function applyCountdownStyles(){
 fetchData();
 setInterval(render,60000);
 
-// theme
 const themeToggle=document.getElementById("themeToggle");
 function setTheme(t){
   document.body.classList.remove("light","dark");
