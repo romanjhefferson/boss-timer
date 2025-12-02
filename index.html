@@ -36,16 +36,14 @@
   .countdown-soon { color: #f1c40f; }
   .countdown-very-soon { color: #e74c3c; }
 
-  .next-highlight td {
+  .next-highlight-yellow td {
+    background: rgba(255, 215, 0, 0.35);
     font-weight: 700;
-    border-left: 4px solid #ffcc00;
-    border-right: 4px solid #ffcc00;
-    animation: glow 1.6s infinite alternate;
   }
 
-  @keyframes glow {
-    from { background: rgba(255,204,0,0.12); }
-    to   { background: rgba(255,204,0,0.32); }
+  .next-highlight-red td {
+    background: rgba(255, 60, 60, 0.35);
+    font-weight: 700;
   }
 
   .alive-fixed td {
@@ -218,10 +216,11 @@ function render() {
 
   document.querySelector("#fixedSoon tbody").innerHTML =
     todayFixed.map(r => {
-      const diff = r.respawn - now, alive = diff <= 0;
-      return `<tr class="${alive ? "alive-fixed":""}" data-time="${r.respawn.getTime()}">
+      const diff = r.respawn - now;
+      const alive = diff <= 0;
+      return `<tr class="${alive ? "alive-fixed" : ""}" data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
-        <td>${alive ? "🟢 Alive":"⚡ Today"}</td>
+        <td>${alive ? "🟢 Alive (Today)" : "⚡ Today"}</td>
         <td>${formatDateWithWeekday(r.respawn)}</td>
         <td class="countdown">${formatCountdown(r.respawn)}</td>
       </tr>`;
@@ -241,15 +240,25 @@ function render() {
   document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* Highlight closest upcoming respawn across ALL tables */
-  document.querySelectorAll("tr").forEach(tr => tr.classList.remove("next-highlight"));
+  /* Highlight closest upcoming respawn across ALL future rows (exclude Alive) */
+  document.querySelectorAll("tr").forEach(tr =>
+    tr.classList.remove("next-highlight-yellow","next-highlight-red")
+  );
+
   const allRows = [...document.querySelectorAll("tr[data-time]")];
   const future = allRows
     .map(tr => ({ tr, t: Number(tr.getAttribute("data-time")) }))
-    .filter(r => r.t >= now.getTime())
+    .filter(r => r.t > now.getTime())   // exclude Alive
     .sort((a,b) => a.t - b.t);
 
-  if (future.length) future[0].tr.classList.add("next-highlight");
+  if (future.length) {
+    const next = future[0];
+    const diff = next.t - now.getTime();
+    const hours = diff / 3600000;
+
+    if (hours < 1) next.tr.classList.add("next-highlight-red");
+    else if (hours < 6) next.tr.classList.add("next-highlight-yellow");
+  }
 
   document.querySelectorAll(".countdown").forEach(td => {
     const t = new Date(Number(td.closest("tr").dataset.time));
@@ -281,5 +290,6 @@ function setTheme(t) {
 setTheme(localStorage.getItem("theme") || "dark");
 themeToggleBtn.addEventListener("click", () => setTheme(document.body.classList.contains("dark") ? "light" : "dark"));
 </script>
+
 </body>
 </html>
