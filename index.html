@@ -165,7 +165,7 @@ function render(){
 
   const todayFixed = fixedUpcoming.filter(f=>{
     const diff=f.respawn-now;
-    return diff>0 && diff < 24*3600*1000; // timezone-safe "today"
+    return diff>0 && f.respawn.getDay() === now.getDay();
   });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
@@ -180,7 +180,7 @@ function render(){
 
   const laterFixed = fixedUpcoming.filter(f=>{
     const diff=f.respawn-now;
-    return diff >= 24*3600*1000;
+    return f.respawn.getDay() !== now.getDay();
   });
 
   document.querySelector("#fixed tbody").innerHTML =
