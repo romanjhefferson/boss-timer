@@ -187,9 +187,9 @@
 </main>
 
 <script>
+  // === CONFIG ===
   const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-  // --- helpers ---
   function normalizeBossName(name){
     return String(name || "")
       .normalize("NFKC")
@@ -199,7 +199,6 @@
       .toLowerCase();
   }
 
-  // Boss configuration
   const bossConfigs = {
     // Alliance dynamic
     "venatus": { name:"Venatus", factions:["Alliance"], type:"dynamic", respawnHours:10 },
@@ -286,7 +285,7 @@
       schedules:[{ day:0, hour:21, minute:0 }]   // Sunday 21:00
     },
 
-    // Shared (Alliance + BloodMoon)
+    // Shared fixed (All / Alliance / BloodMoon)
     "icaruthia": {
       name:"Icaruthia", factions:["Alliance","BloodMoon"], type:"fixed",
       schedules:[
@@ -309,32 +308,11 @@
     }
   };
 
-  // Find config by sheet boss name (tolerant to extra text)
-  function findBossConfig(sheetName){
-    const cleaned = normalizeBossName(sheetName);
-    let exact = null;
-    let partial = null;
-
-    for (const cfg of Object.values(bossConfigs)){
-      const cfgNorm = normalizeBossName(cfg.name);
-      if (!cfgNorm) continue;
-      if (cleaned === cfgNorm){
-        exact = cfg;
-        break;
-      }
-      if (cleaned.includes(cfgNorm)){
-        if (!partial || cfgNorm.length > normalizeBossName(partial.name).length){
-          partial = cfg;
-        }
-      }
-    }
-    return exact || partial || null;
-  }
-
-  // Filter state
+  // --- Filter logic ---
   let filterMode = localStorage.getItem("filterMode") || "All";
   const factionFilterEl = document.getElementById("factionFilter");
   factionFilterEl.value = filterMode;
+
   factionFilterEl.addEventListener("change", e=>{
     filterMode = e.target.value;
     localStorage.setItem("filterMode", filterMode);
@@ -347,7 +325,7 @@
     return cfg.factions && cfg.factions.includes(filterMode);
   }
 
-  // Date helpers
+  // --- Date helpers (Philippines timezone) ---
   function parseDeathTime(str){
     const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
     if (!m) return new Date(NaN);
@@ -386,48 +364,53 @@
     return `${h}h ${m}m ${s}s`;
   }
 
-  // Fixed respawn next occurrence
+  // --- Weekly occurrence for fixed bosses ---
   function getNextWeeklyOccurrence(day, hour, minute, now){
     const result = new Date(now);
     result.setSeconds(0,0);
     result.setHours(hour, minute, 0, 0);
 
-    const currentDow = now.getDay();
-    let diff = (day - currentDow + 7) % 7;
+    const currentDOW = result.getDay();
+    let diff = (day - currentDOW + 7) % 7;
 
-    if (diff === 0){
-      // same weekday
-      if (result <= now){
-        diff = 7;     // already passed today -> next week
-      } else {
-        diff = 0;     // later today -> keep today
-      }
+    if (diff === 0) {
+      if (result <= now) diff = 7;   // already passed today → next week
+      else diff = 0;                 // still later today
     }
-
-    result.setDate(now.getDate() + diff);
+    result.setDate(result.getDate() + diff);
     return result;
+  }
+
+  // --- Find config from sheet boss name (substring match, very tolerant) ---
+  function findBossConfigFromSheetName(sheetName){
+    const cleaned = normalizeBossName(sheetName);
+    for (const cfg of Object.values(bossConfigs)){
+      const cfgNorm = normalizeBossName(cfg.name);
+      if (cleaned.includes(cfgNorm)) return cfg;
+    }
+    return null;
   }
 
   let bossRows = [];
   let countdownTimer = null;
 
   async function fetchSheet(){
-    try {
+    try{
       const res = await fetch(sheetURL);
       bossRows = await res.json();
-    } catch (e){
+    }catch(e){
       console.error("Error fetching sheet:", e);
       bossRows = [];
     }
     render();
   }
 
-  // Build dynamic list
+  // --- Build dynamic respawns from sheet ---
   function buildDynamicRespawns(now){
     const latestDeaths = {};
 
     bossRows.forEach(row=>{
-      const cfg = findBossConfig(row.Boss);
+      const cfg = findBossConfigFromSheetName(row.Boss);
       if (!cfg || cfg.type !== "dynamic") return;
       if (!row.DeathTime) return;
 
@@ -441,17 +424,172 @@
     });
 
     const list = [];
-    Object.entries(latestDeaths).forEach(([key, death])=>{
-      const cfg = bossConfigs[key];
+    Object.entries(latestDeaths).forEach(([normKey, death])=>{
+      const cfg = Object.values(bossConfigs).find(
+        c => normalizeBossName(c.name) === normKey
+      );
       if (!cfg || cfg.type !== "dynamic") return;
       const respawn = new Date(death.getTime() + cfg.respawnHours * 3600000);
-      list.push({ key, cfg, respawn });
+      list.push({ cfg, respawn });
     });
+
     return list;
   }
 
-  // Build fixed list
+  // --- Build fixed respawns (pure config) ---
   function buildFixedRespawns(now){
     const fixed = [];
-    Object.entries(bossConfigs).forEach(([key, cfg])=>{
-      if (!cfg || cfg.type !== "fixed" || !
+    Object.values(bossConfigs).forEach(cfg=>{
+      if (cfg.type !== "fixed" || !cfg.schedules) return;
+      cfg.schedules.forEach(sch=>{
+        const respawn = getNextWeeklyOccurrence(sch.day, sch.hour, sch.minute, now);
+        fixed.push({ cfg, respawn });
+      });
+    });
+    return fixed;
+  }
+
+  function render(){
+    const now = new Date();
+
+    const dynamicAll = buildDynamicRespawns(now)
+      .filter(entry => passesFilter(entry.cfg))
+      .sort((a,b)=>a.respawn - b.respawn);
+
+    const fixedAll = buildFixedRespawns(now)
+      .filter(entry => passesFilter(entry.cfg))
+      .sort((a,b)=>a.respawn - b.respawn);
+
+    const fixedToday = [];
+    const fixedOther = [];
+
+    const todayPH = now.toLocaleDateString("en-PH", { timeZone:"Asia/Manila" });
+
+    fixedAll.forEach(entry=>{
+      const dayPH = entry.respawn.toLocaleDateString("en-PH", { timeZone:"Asia/Manila" });
+      if (dayPH === todayPH){
+        fixedToday.push(entry);
+      } else {
+        fixedOther.push(entry);
+      }
+    });
+
+    // --- Render dynamic table ---
+    const dynamicBody = document.querySelector("#dynamicTable tbody");
+    dynamicBody.innerHTML = dynamicAll.map(entry=>{
+      const diff = entry.respawn - now;
+      const hours = diff / 3600000;
+      let status;
+      if (diff <= 0){
+        status = "🟢 Alive";
+      } else if (hours < 1){
+        status = "🔴 Very Soon";
+      } else if (hours < 6){
+        status = "🟡 Soon";
+      } else {
+        const todayStr = now.toDateString();
+        const tomorrowStr = new Date(now.getTime() + 86400000).toDateString();
+        const respawnStr = entry.respawn.toDateString();
+        if (respawnStr === todayStr) status = "⏳ Today";
+        else if (respawnStr === tomorrowStr) status = "📅 Tomorrow";
+        else status = "📌 Scheduled";
+      }
+
+      return `
+        <tr data-time="${entry.respawn.getTime()}">
+          <td>${entry.cfg.name}</td>
+          <td>${status}</td>
+          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
+          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    // --- Render fixed today ---
+    const fixedTodayBody = document.querySelector("#fixedToday tbody");
+    fixedTodayBody.innerHTML = fixedToday.map(entry=>{
+      return `
+        <tr data-time="${entry.respawn.getTime()}">
+          <td>${entry.cfg.name}</td>
+          <td>⚡ Today</td>
+          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
+          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    // --- Render fixed other ---
+    const fixedOtherBody = document.querySelector("#fixedOther tbody");
+    fixedOtherBody.innerHTML = fixedOther.map(entry=>{
+      return `
+        <tr data-time="${entry.respawn.getTime()}">
+          <td>${entry.cfg.name}</td>
+          <td>Scheduled</td>
+          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
+          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    document.getElementById("fixedSeparator").style.display =
+      fixedOther.length ? "block" : "none";
+
+    if (countdownTimer) clearInterval(countdownTimer);
+    updateCountdowns();
+    countdownTimer = setInterval(updateCountdowns, 1000);
+  }
+
+  function updateCountdowns(){
+    const now = new Date();
+    document.querySelectorAll(".countdown").forEach(td=>{
+      const tr = td.closest("tr");
+      if (!tr || !tr.dataset.time) return;
+      const t = new Date(Number(tr.dataset.time));
+      const diff = t - now;
+      td.textContent = formatCountdown(t);
+
+      td.style.fontWeight = "normal";
+      td.style.color = "";
+      if (diff > 0){
+        const h = diff / 3600000;
+        if (h < 1){
+          td.style.fontWeight = "700";
+          td.style.color = "#ff4c4c";
+        } else if (h < 6){
+          td.style.fontWeight = "700";
+          td.style.color = "#ffd700";
+        }
+      }
+    });
+
+    // remove past fixed-today rows (Option A behavior)
+    const nowTime = now.getTime();
+    document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
+      const time = Number(tr.dataset.time);
+      if (time <= nowTime){
+        tr.remove();
+      }
+    });
+  }
+
+  // --- Theme toggle ---
+  const themeToggle = document.getElementById("themeToggle");
+  function setTheme(mode){
+    document.body.classList.remove("light","dark");
+    document.body.classList.add(mode);
+    localStorage.setItem("theme", mode);
+    themeToggle.textContent = mode === "dark" ? "🌙" : "☀️";
+  }
+  setTheme(localStorage.getItem("theme") || "dark");
+  themeToggle.addEventListener("click", ()=>{
+    const next = document.body.classList.contains("dark") ? "light" : "dark";
+    setTheme(next);
+  });
+
+  // --- Start ---
+  fetchSheet();
+  setInterval(fetchSheet, 60000);
+</script>
+
+</body>
+</html>
