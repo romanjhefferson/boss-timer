@@ -2,61 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Lordnine Boss Monitoring</title>
 
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; transition: background 0.3s, color 0.3s; }
-  header { display: flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 0.8rem 1rem; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+body { font-family: Arial, sans-serif; margin:0; padding:0; transition:background .3s, color .3s; }
+header { display:flex; align-items:center; justify-content:center; gap:.8rem; padding:.8rem 1rem; position:sticky; top:0; z-index:10; box-shadow:0 2px 6px rgba(0,0,0,.2); }
 
-  #factionFilter {
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    border: 1px solid;
-    font-size: 0.9rem;
-  }
+#factionFilter { padding:.3rem .6rem; border-radius:4px; font-size:.9rem; }
+#themeToggle { background:none; border:1px solid; border-radius:6px; padding:.3rem .8rem; cursor:pointer; font-size:1.1rem; }
 
-  #themeToggle {
-    background: none;
-    border: 1px solid;
-    border-radius: 6px;
-    padding: 0.3rem 0.8rem;
-    cursor: pointer;
-    font-size: 1.1rem;
-  }
+table { width:100%; border-collapse:collapse; margin:1rem 0; border-radius:8px; overflow:hidden; }
+th, td { padding:.75rem; text-align:left; font-size:.95rem; }
+th { position:sticky; top:3.1rem; z-index:5; }
 
-  table { width: 100%; border-collapse: collapse; margin: 1rem 0; border-radius: 8px; overflow: hidden; }
-  th, td { padding: 0.75rem; text-align: left; font-size: 0.95rem; }
-  th { position: sticky; top: 3.1rem; z-index: 5; }
+.highlight-today { border:2px solid; box-shadow:0 0 10px; }
+.separator { text-align:center; font-weight:bold; margin:2rem 0 1rem; padding:.5rem; border-top:2px solid #ccc; border-bottom:2px solid #ccc; opacity:.8; }
 
-  .highlight-today { border: 2px solid; box-shadow: 0 0 10px; }
+body.dark { background:#2c2c2c; color:#e0e0e0; }
+body.dark header { background:#111; }
+body.dark table { background:#3a3a3a; }
+body.dark th { background:#444; }
+body.dark td { border-bottom:1px solid #555; }
+body.dark .separator { border-color:#777; color:#ddd; }
 
-  .separator { text-align: center; font-weight: bold; margin: 2rem 0 1rem; padding: 0.5rem; border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; font-size: 1rem; opacity: 0.8; }
+body.light { background:#f5f5f5; color:#222; }
+body.light header { background:#fff; }
+body.light table { background:white; box-shadow:0 2px 6px rgba(0,0,0,.20); }
+body.light th { background:#f0f0f0; }
+body.light td { border-bottom:1px solid #ddd; }
+body.light .separator { border-color:#bbb; color:#333; }
 
-  .alive-fixed td {
-    font-weight: 700;
-    color: #4cff4c;
-    text-shadow: 0 0 7px rgba(0,255,0,0.6);
-  }
-
-  body.dark { background: #2c2c2c; color: #e0e0e0; }
-  body.dark header { background: #111; }
-  body.dark table { background: #3a3a3a; }
-  body.dark th { background: #444; color: #f0f0f0; }
-  body.dark td { border-bottom: 1px solid #555; }
-  body.dark .separator { border-color: #777; color: #ddd; }
-
-  body.light { background: #f5f5f5; color: #222; }
-  body.light header { background: #fff; color: #222; }
-  body.light table { background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-  body.light th { background: #f0f0f0; color: #222; }
-  body.light td { border-bottom: 1px solid #ddd; }
-  body.light .separator { border-color: #bbb; color: #333; }
-
-  @media (max-width: 600px) {
-    header { flex-direction: column; gap: 0.55rem; }
-    #factionFilter, #themeToggle { width: 60%; font-size: 0.9rem; }
-  }
+@media(max-width:600px){
+  header{flex-direction:column; gap:.55rem;}
+  #factionFilter,#themeToggle{width:60%; font-size:.9rem;}
+}
 </style>
 </head>
 <body>
@@ -70,8 +50,8 @@
   <button id="themeToggle">🌙</button>
 </header>
 
-<h3 id="fixedSoonHeader" style="display:none;">⚡ Fixed Respawns Today</h3>
-<table class="highlight-today" id="fixedSoon" style="display:none;">
+<h3>⚡ Fixed Respawns Today</h3>
+<table class="highlight-today" id="fixedSoon">
   <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
   <tbody></tbody>
 </table>
@@ -89,47 +69,39 @@
 </table>
 
 <script>
-const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+const sheetURL="https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
 const allianceBosses = new Set([
-  "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus",
-  "Neutro","Lady Dalia","General Aquleus","Thymele","Amentis",
-  "Baron Braudmore","Venatus","Viorent"
+  "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus","Neutro","Lady Dalia",
+  "General Aquleus","Thymele","Amentis","Baron Braudmore","Venatus","Viorent"
 ]);
-function displayName(boss) { return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss; }
+function displayName(boss){ return allianceBosses.has(boss)?`${boss} (Alliance)`:boss; }
 
-let filterMode = localStorage.getItem("filterMode") || "All";
-document.getElementById("factionFilter").value = filterMode;
-document.getElementById("factionFilter").addEventListener("change", e => {
-  filterMode = e.target.value;
-  localStorage.setItem("filterMode", filterMode);
-  render();
+let filterMode=localStorage.getItem("filterMode")||"All";
+document.getElementById("factionFilter").value=filterMode;
+document.getElementById("factionFilter").addEventListener("change",e=>{
+  filterMode=e.target.value; localStorage.setItem("filterMode",filterMode); render();
 });
-
-function passesFilter(boss) {
-  const isAlliance = allianceBosses.has(boss);
-  if (filterMode === "All") return true;
-  if (filterMode === "Alliance") return isAlliance;
-  if (filterMode === "BloodMoon") return !isAlliance;
-  return true;
+function passesFilter(boss){
+  const isAlliance=allianceBosses.has(boss);
+  if(filterMode==="All")return true;
+  if(filterMode==="Alliance")return isAlliance;
+  if(filterMode==="BloodMoon")return !isAlliance;
 }
-
-function formatDate(d) { return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true }); }
-function formatDateWithWeekday(d) { return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`; }
-function formatCountdown(t) {
-  const diff = t - new Date();
-  if (diff <= 0) return "Now!";
-  const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+function formatDate(d){ return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}); }
+function formatDateWithWeekday(d){ return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`; }
+function formatCountdown(t){
+  const diff=t-new Date();
+  if(diff<=0) return "Now!";
+  const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
   return `${h}h ${m}m ${s}s`;
 }
-
-const respawnTimes = {
+const respawnTimes={
   "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
-
-const fixedSchedules = {
+const fixedSchedules={
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
   "Neutro":[{day:2,hour:19,minute:0},{day:4,hour:11,minute:30}],
@@ -146,62 +118,41 @@ const fixedSchedules = {
 };
 
 let countdownInterval;
+async function fetchData(){ const res=await fetch(sheetURL); window.bossData=await res.json(); render(); }
 
-async function fetchData() {
-  const res = await fetch(sheetURL);
-  window.bossData = await res.json();
-  render();
-}
+function render(){
+  const now=new Date(), data=window.bossData||[];
+  let dynamic=[], fixedUpcoming=[];
 
-function render() {
-  const now = new Date();
-  const data = window.bossData || [];
-
-  let dynamic = [];
-  let fixedUpcoming = [];
-
-  // dynamic
-  data.forEach(row => {
-    const boss = row.Boss?.trim();
-    if (!boss || !respawnTimes[boss] || !row.DeathTime) return;
-    if (!passesFilter(boss)) return;
-    const death = new Date(row.DeathTime);
-    const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
-    dynamic.push({ boss, respawn });
+  data.forEach(r=>{
+    const boss=r.Boss?.trim(); if(!boss||!respawnTimes[boss]||!r.DeathTime||!passesFilter(boss))return;
+    const respawn=new Date(new Date(r.DeathTime).getTime()+respawnTimes[boss]*3600000);
+    dynamic.push({boss,respawn});
   });
 
-  // fixed
-  Object.entries(fixedSchedules).forEach(([boss, s]) => {
-    if (!passesFilter(boss)) return;
-    s.forEach(sc => {
-      const respawn = new Date(now);
-      respawn.setDate(now.getDate() + ((sc.day - now.getDay() + 7) % 7));
-      respawn.setHours(sc.hour, sc.minute, 0, 0);
-
-      const isScheduledToday = now.getDay() === sc.day;
-      if (!isScheduledToday && respawn < now) respawn.setDate(respawn.getDate() + 7);
-
-      fixedUpcoming.push({ boss, respawn });
+  Object.entries(fixedSchedules).forEach(([boss,s])=>{
+    if(!passesFilter(boss)) return;
+    s.forEach(sc=>{
+      const respawn=new Date(now);
+      respawn.setDate(now.getDate()+((sc.day-now.getDay()+7)%7));
+      respawn.setHours(sc.hour,sc.minute,0,0);
+      fixedUpcoming.push({boss,respawn});
     });
   });
 
-  // ensure fixed bosses are not in dynamic
-  dynamic = dynamic.filter(r => !fixedSchedules.hasOwnProperty(r.boss));
+  dynamic=dynamic.filter(r=>!fixedSchedules.hasOwnProperty(r.boss));
+  dynamic.sort((a,b)=>a.respawn-b.respawn);
+  fixedUpcoming.sort((a,b)=>a.respawn-b.respawn);
 
-  dynamic.sort((a,b) => a.respawn - b.respawn);
-  fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
-
-  // DYNAMIC table
   document.querySelector("#upcoming tbody").innerHTML =
-    dynamic.map(r => {
-      const diff = r.respawn - now;
-      const h = diff / 3600000;
-      let status = diff <= 0 ? "🟢 Alive"
-        : h < 1 ? "🔴 Very Soon"
-        : h < 6 ? "🟡 Soon"
-        : r.respawn.toDateString() === now.toDateString() ? "⏳ Today"
-        : r.respawn.toDateString() === new Date(now.getTime()+86400000).toDateString() ? "📅 Tomorrow"
-        : "📌 Scheduled";
+    dynamic.map(r=>{
+      const diff=r.respawn-now, h=diff/3600000;
+      let status = diff<=0 ? "🟢 Alive"
+          : h<1? "🔴 Very Soon"
+          : h<6? "🟡 Soon"
+          : r.respawn.toDateString()===now.toDateString()? "⏳ Today"
+          : r.respawn.toDateString()===new Date(now.getTime()+86400000).toDateString()? "📅 Tomorrow"
+          : "📌 Scheduled";
       return `<tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
         <td>${status}</td>
@@ -210,45 +161,24 @@ function render() {
       </tr>`;
     }).join("");
 
-  // FIXED with 10-minute grace
-  const todayFixedRaw = fixedUpcoming.filter(f => f.respawn.toDateString() === now.toDateString());
-  const laterFixed = fixedUpcoming.filter(f => f.respawn.toDateString() !== now.toDateString());
-
-  const todayFixed = [];
-  todayFixedRaw.forEach(r => {
-    const diff = r.respawn - now;
-    if (diff > 0) {
-      todayFixed.push({ ...r, state: "upcoming" });
-    } else {
-      const minutesPast = Math.abs(diff) / 60000;
-      if (minutesPast <= 10) todayFixed.push({ ...r, state: "alive" });
-    }
+  const todayFixed = fixedUpcoming.filter(f => {
+    const diff=f.respawn-now;
+    return f.respawn.toDateString()===now.toDateString() && diff>0;
   });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
-    todayFixed.map(r => {
-      const diff = r.respawn - now;
-      let status;
-      let countdown;
-
-      if (r.state === "alive") {
-        status = "🟢 Alive (Today)";
-        countdown = `<span style="font-weight:700;color:#4cff4c;">Now!</span>`;
-      } else {
-        status = "⚡ Today";
-        countdown = formatCountdown(r.respawn);
-      }
-
-      return `<tr data-time="${r.respawn.getTime()}">
+    todayFixed.map(r=>`
+      <tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
-        <td>${status}</td>
+        <td>⚡ Today</td>
         <td>${formatDateWithWeekday(r.respawn)}</td>
-        <td class="countdown">${countdown}</td>
-      </tr>`;
-    }).join("");
+        <td class="countdown">${formatCountdown(r.respawn)}</td>
+      </tr>
+    `).join("");
 
+  const laterFixed = fixedUpcoming.filter(f => f.respawn.toDateString()!==now.toDateString());
   document.querySelector("#fixed tbody").innerHTML =
-    laterFixed.map(r => `
+    laterFixed.map(r=>`
       <tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
         <td>Scheduled</td>
@@ -257,57 +187,52 @@ function render() {
       </tr>
     `).join("");
 
-  document.getElementById("fixedSoonHeader").style.display = todayFixed.length ? "block" : "none";
-  document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  if (countdownInterval) clearInterval(countdownInterval);
+  if(countdownInterval) clearInterval(countdownInterval);
   applyCountdownStyles();
-  countdownInterval = setInterval(applyCountdownStyles, 1000);
+  countdownInterval=setInterval(applyCountdownStyles,1000);
 }
 
-function applyCountdownStyles() {
-  const now = new Date();
-  document.querySelectorAll(".countdown").forEach(td => {
-    const row = td.closest("tr");
-    const tMs = Number(row.dataset.time);
-    if (!tMs) return;
-    const t = new Date(tMs);
-    const diff = t - now;
-    const h = diff / 3600000;
+function applyCountdownStyles(){
+  const now=new Date();
+  document.querySelectorAll(".countdown").forEach(td=>{
+    const row=td.closest("tr"), t=new Date(Number(row.dataset.time));
+    const diff=t-now, h=diff/3600000;
 
-    if (!td.innerHTML.includes("Now!")) td.textContent = formatCountdown(t);
+    if(diff>0) td.textContent=formatCountdown(t);
+    else td.textContent="Now!";
 
-    // reset visual
-    td.style.fontWeight = "normal";
-    td.style.color = "";
+    td.style.fontWeight="normal"; td.style.color="";
 
-    if (diff > 0) {
-      if (h < 1) {
-        td.style.fontWeight = "700";
-        td.style.color = "#ff4c4c";
-      } else if (h < 6) {
-        td.style.fontWeight = "700";
-        td.style.color = "#ffd700";
-      }
+    if(diff>0){
+      if(h<1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
+      else if(h<6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
     }
+  });
+
+  // remove expired fixed rows instantly
+  document.querySelectorAll("#fixedSoon tbody tr").forEach(row=>{
+    const t=new Date(Number(row.dataset.time));
+    if(t-now <= 0) row.remove();
   });
 }
 
 fetchData();
-setInterval(render, 60000);
+setInterval(render,60000);
 
-const themeToggleBtn = document.getElementById("themeToggle");
-function setTheme(t) {
+// theme
+const themeToggle=document.getElementById("themeToggle");
+function setTheme(t){
   document.body.classList.remove("light","dark");
   document.body.classList.add(t);
-  localStorage.setItem("theme", t);
-  themeToggleBtn.textContent = t === "dark" ? "🌙" : "☀️";
+  localStorage.setItem("theme",t);
+  themeToggle.textContent=t==="dark"?"🌙":"☀️";
 }
-setTheme(localStorage.getItem("theme") || "dark");
-themeToggleBtn.addEventListener("click", () =>
-  setTheme(document.body.classList.contains("dark") ? "light" : "dark")
-);
+setTheme(localStorage.getItem("theme")||"dark");
+themeToggle.addEventListener("click",()=>setTheme(
+  document.body.classList.contains("dark")?"light":"dark"
+));
 </script>
 
 </body>
