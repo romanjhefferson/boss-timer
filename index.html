@@ -103,6 +103,8 @@ const respawnTimes={
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
+
+// 🚨 FIXED — Ego not included here (correct)
 const fixedSchedules={
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
@@ -179,7 +181,6 @@ function render(){
     `).join("");
 
   const laterFixed = fixedUpcoming.filter(f=>{
-    const diff=f.respawn-now;
     return f.respawn.getDay() !== now.getDay();
   });
 
