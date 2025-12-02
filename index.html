@@ -104,7 +104,7 @@ const respawnTimes={
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
 
-// 🚨 FIXED — Ego not included here (correct)
+// ❗ Ego is intentionally NOT included here (correct)
 const fixedSchedules={
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
@@ -130,7 +130,12 @@ function render(){
 
   data.forEach(r=>{
     const boss=r.Boss?.trim(); if(!boss||!respawnTimes[boss]||!r.DeathTime||!passesFilter(boss))return;
-    const respawn=new Date(new Date(r.DeathTime).getTime()+respawnTimes[boss]*3600000);
+
+    // 🟢 FIX: sanitize timestamp before converting
+    const death = new Date(String(r.DeathTime).trim().replace(/\s+/g," "));
+    if (isNaN(death.getTime())) return; // skip invalid timestamps safely
+
+    const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
     dynamic.push({boss,respawn});
   });
 
@@ -171,14 +176,14 @@ function render(){
   });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
-    todayFixed.map(r=>`
+    todayFixed.length ? todayFixed.map(r=>`
       <tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
         <td>⚡ Today</td>
         <td>${formatDateWithWeekday(r.respawn)}</td>
         <td class="countdown">${formatCountdown(r.respawn)}</td>
       </tr>
-    `).join("");
+    `).join("") : "";
 
   const laterFixed = fixedUpcoming.filter(f=>{
     return f.respawn.getDay() !== now.getDay();
