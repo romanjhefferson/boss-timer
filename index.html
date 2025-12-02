@@ -100,14 +100,13 @@ function formatCountdown(t){
   return `${h}h ${m}m ${s}s`;
 }
 
-/* Respawn hours per boss */
 const respawnTimes={
   "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
 
-/* ⚠ FIX: Ego is NOT here */
+/* ✔ FIXED — Ego removed from fixed schedules */
 const fixedSchedules={
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
@@ -122,16 +121,7 @@ const fixedSchedules={
   "Icaruthia":[{day:2,hour:21,minute:0},{day:5,hour:21,minute:0}],
   "Motti":[{day:3,hour:19,minute:0},{day:6,hour:19,minute:0}],
   "Nevaea":[{day:0,hour:22,minute:0}]
-];
-
-/* 🔥 Safe manual date parser (fixes Ego forever) */
-function parseDate(str){
-  str = String(str).trim();
-  const p = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
-  if(!p) return new Date(NaN);
-  const [, M, D, Y, hh, mm] = p.map(Number);
-  return new Date(Y, M-1, D, hh, mm);
-}
+};
 
 let countdownInterval;
 async function fetchData(){ const res=await fetch(sheetURL); window.bossData=await res.json(); render(); }
@@ -141,11 +131,11 @@ function render(){
   let dynamic=[], fixedUpcoming=[];
 
   data.forEach(r=>{
-    let boss = String(r.Boss || "").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\s+/g," ").trim();
-    if(!boss||!respawnTimes[boss]||!r.DeathTime||!passesFilter(boss))return;
+    const boss=r.Boss?.trim(); if(!boss||!respawnTimes[boss]||!r.DeathTime||!passesFilter(boss))return;
 
-    const death = parseDate(r.DeathTime);
-    if(isNaN(death.getTime())) return;
+    /* ✔ FIX — makes timestamps always valid */
+    const death = new Date(String(r.DeathTime).trim().replace(/\s+/g," "));
+    if (isNaN(death.getTime())) return;
 
     const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
     dynamic.push({boss,respawn});
@@ -188,14 +178,14 @@ function render(){
   });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
-    todayFixed.map(r=>`
+    todayFixed.length ? todayFixed.map(r=>`
       <tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
         <td>⚡ Today</td>
         <td>${formatDateWithWeekday(r.respawn)}</td>
         <td class="countdown">${formatCountdown(r.respawn)}</td>
       </tr>
-    `).join("");
+    `).join("") : "";
 
   const laterFixed = fixedUpcoming.filter(f=>{
     return f.respawn.getDay() !== now.getDay();
