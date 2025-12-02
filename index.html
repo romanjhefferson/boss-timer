@@ -17,6 +17,7 @@ th, td { padding:.75rem; text-align:left; font-size:.95rem; }
 th { position:sticky; top:3.1rem; z-index:5; }
 
 .highlight-today { border:2px solid; box-shadow:0 0 10px; }
+
 .separator { text-align:center; font-weight:bold; margin:2rem 0 1rem; padding:.5rem; border-top:2px solid #ccc; border-bottom:2px solid #ccc; opacity:.8; }
 
 body.dark { background:#2c2c2c; color:#e0e0e0; }
@@ -75,6 +76,7 @@ const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus","Neutro","Lady Dalia",
   "General Aquleus","Thymele","Amentis","Baron Braudmore","Venatus","Viorent"
 ]);
+
 function displayName(boss){ return allianceBosses.has(boss)?`${boss} (Alliance)`:boss; }
 
 let filterMode=localStorage.getItem("filterMode")||"All";
@@ -104,7 +106,7 @@ const respawnTimes={
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
 
-// ❗ Ego is intentionally NOT included here (correct)
+/* ✔ FIXED — Ego removed from fixed schedules */
 const fixedSchedules={
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
@@ -131,9 +133,9 @@ function render(){
   data.forEach(r=>{
     const boss=r.Boss?.trim(); if(!boss||!respawnTimes[boss]||!r.DeathTime||!passesFilter(boss))return;
 
-    // 🟢 FIX: sanitize timestamp before converting
+    /* ✔ FIX — makes timestamps always valid */
     const death = new Date(String(r.DeathTime).trim().replace(/\s+/g," "));
-    if (isNaN(death.getTime())) return; // skip invalid timestamps safely
+    if (isNaN(death.getTime())) return;
 
     const respawn = new Date(death.getTime() + respawnTimes[boss] * 3600000);
     dynamic.push({boss,respawn});
@@ -218,6 +220,7 @@ function applyCountdownStyles(){
       else if(h<6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
     }
   });
+
   document.querySelectorAll("#fixedSoon tbody tr").forEach(row=>{
     const t=new Date(Number(row.dataset.time));
     if(t-now <= 0) row.remove();
