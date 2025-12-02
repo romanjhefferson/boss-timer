@@ -71,43 +71,52 @@ body.light .separator { border-color:#bbb; color:#333; }
 </table>
 
 <script>
-const sheetURL="https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* Alliance bosses for UI label only */
+/* ---- Alliance bosses for UI label only ---- */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus","Neutro","Lady Dalia",
   "General Aquleus","Thymele","Amentis","Baron Braudmore","Venatus","Viorent"
 ]);
 
+/* ---- Clean boss names everywhere ---- */
+function normalizeBossName(boss){
+  return String(boss)
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")    // zero-width
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/* ---- Display formatting ---- */
 function displayName(boss){
   return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
 }
 
-/* Filter — now normalizes boss name (fixes Titore bug) */
-function normalizeBossName(boss){
-  return String(boss)
-    .normalize("NFKC")
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-function passesFilter(boss){
-  boss = normalizeBossName(boss);
-  const isAlliance = allianceBosses.has(boss);
-  if(filterMode==="All") return true;
-  if(filterMode==="Alliance") return isAlliance;
-  if(filterMode==="BloodMoon") return !isAlliance;
-}
-
-let filterMode=localStorage.getItem("filterMode")||"All";
-document.getElementById("factionFilter").value=filterMode;
-document.getElementById("factionFilter").addEventListener("change",e=>{
-  filterMode=e.target.value;
-  localStorage.setItem("filterMode",filterMode);
+/* ---- Saved filter ---- */
+let filterMode = localStorage.getItem("filterMode") || "All";
+document.getElementById("factionFilter").value = filterMode;
+document.getElementById("factionFilter").addEventListener("change", e=>{
+  filterMode = e.target.value;
+  localStorage.setItem("filterMode", filterMode);
   render();
 });
 
-/* Date formatting */
+/* ---- Filtering logic ---- */
+function passesFilter(boss){
+  const isAlliance = allianceBosses.has(boss);
+  if(filterMode === "All") return true;
+  if(filterMode === "Alliance") return isAlliance;
+  if(filterMode === "BloodMoon") return !isAlliance;
+}
+
+/* ---- Date helpers ---- */
+function parseDate(str){
+  const p = String(str).trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
+  if(!p) return new Date(NaN);
+  const [, M, D, Y, hh, mm] = p.map(Number);
+  return new Date(Y, M-1, D, hh, mm);
+}
 function formatDate(d){
   return d.toLocaleString('en-US',{
     month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true
@@ -125,14 +134,14 @@ function formatCountdown(t){
   return `${h}h ${m}m ${s}s`;
 }
 
-/* Respawn hours per boss */
-const respawnTimes={
+/* ---- Respawn hours per boss ---- */
+const respawnTimes = {
   "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
   "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
 };
 
-/* Fixed schedule — Ego is NOT here */
+/* ---- Fixed schedules ---- */
 const fixedSchedules = {
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
   "Saphirus":[{day:2,hour:11,minute:30},{day:0,hour:17,minute:0}],
@@ -149,14 +158,6 @@ const fixedSchedules = {
   "Nevaea":[{day:0,hour:22,minute:0}]
 };
 
-function parseDate(str){
-  str = String(str).trim();
-  const p = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
-  if(!p) return new Date(NaN);
-  const [, M, D, Y, hh, mm] = p.map(Number);
-  return new Date(Y, M-1, D, hh, mm);
-}
-
 let countdownInterval;
 async function fetchData(){
   const res = await fetch(sheetURL);
@@ -165,21 +166,19 @@ async function fetchData(){
 }
 
 function render(){
-  const now=new Date();
-  const data=window.bossData||[];
+  const now = new Date();
+  const data = window.bossData || [];
   let dynamic=[], fixedUpcoming=[];
-  
+
   data.forEach(r=>{
-    let rawBoss = String(r.Boss || "");
-    let boss = normalizeBossName(rawBoss);
+    const key = normalizeBossName(r.Boss);
+    if(!key || !respawnTimes[key] || !r.DeathTime || !passesFilter(key)) return;
 
-    if(!boss || !respawnTimes[boss] || !r.DeathTime || !passesFilter(boss)) return;
-
-    const death=parseDate(r.DeathTime);
+    const death = parseDate(r.DeathTime);
     if(isNaN(death)) return;
 
-    const respawn=new Date(death.getTime() + respawnTimes[boss] * 3600000);
-    dynamic.push({boss,respawn});
+    const respawn = new Date(death.getTime() + respawnTimes[key] * 3600000);
+    dynamic.push({boss:key, respawn});
   });
 
   Object.entries(fixedSchedules).forEach(([boss,schedules])=>{
@@ -198,17 +197,14 @@ function render(){
 
   document.querySelector("#upcoming tbody").innerHTML =
     dynamic.map(r=>{
-      const diff=r.respawn-now;
-      const h=diff/3600000;
+      const diff=r.respawn-now, h=diff/3600000;
       let status =
         diff<=0 ? "🟢 Alive" :
         h<1     ? "🔴 Very Soon" :
         h<6     ? "🟡 Soon" :
-        r.respawn.toDateString()===now.toDateString()
-                 ? "⏳ Today" :
-        r.respawn.toDateString()===new Date(now.getTime()+86400000).toDateString()
-                 ? "📅 Tomorrow" :
-                   "📌 Scheduled";
+        r.respawn.toDateString()===now.toDateString() ? "⏳ Today" :
+        r.respawn.toDateString()===new Date(now.getTime()+86400000).toDateString() ? "📅 Tomorrow" :
+        "📌 Scheduled";
 
       return `<tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
@@ -218,7 +214,7 @@ function render(){
       </tr>`;
     }).join("");
 
-  const todayFixed=fixedUpcoming.filter(f=>{
+  const todayFixed = fixedUpcoming.filter(f=>{
     const diff=f.respawn-now;
     return diff>0 && f.respawn.getDay()===now.getDay();
   });
@@ -232,7 +228,7 @@ function render(){
       </tr>
     `).join("");
 
-  const laterFixed=fixedUpcoming.filter(f=>f.respawn.getDay()!==now.getDay());
+  const laterFixed = fixedUpcoming.filter(f=>f.respawn.getDay()!==now.getDay());
   document.querySelector("#fixed tbody").innerHTML =
     laterFixed.map(r=>`
       <tr data-time="${r.respawn.getTime()}">
@@ -254,21 +250,12 @@ function applyCountdownStyles(){
   const now=new Date();
   document.querySelectorAll(".countdown").forEach(td=>{
     const t=new Date(Number(td.closest("tr").dataset.time));
-    const diff=t-now;
-    const h=diff/3600000;
-
+    const diff=t-now, h=diff/3600000;
     td.textContent = diff>0 ? formatCountdown(t) : "Now!";
-    td.style.fontWeight="normal";
-    td.style.color="";
-
+    td.style.fontWeight="normal"; td.style.color="";
     if(diff>0){
-      if(h<1){
-        td.style.fontWeight="700";
-        td.style.color="#ff4c4c";
-      }else if(h<6){
-        td.style.fontWeight="700";
-        td.style.color="#ffd700";
-      }
+      if(h<1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
+      else if(h<6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
     }
   });
 
@@ -281,7 +268,7 @@ function applyCountdownStyles(){
 fetchData();
 setInterval(render,60000);
 
-/* Theme */
+/* ---- Theme ---- */
 const themeToggle=document.getElementById("themeToggle");
 function setTheme(t){
   document.body.classList.remove("light","dark");
