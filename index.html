@@ -23,6 +23,7 @@
     z-index: 10;
     box-shadow: 0 2px 6px rgba(0,0,0,.2);
   }
+
   #factionFilter {
     padding: .3rem .6rem;
     border-radius: 4px;
@@ -61,18 +62,25 @@
     overflow: hidden;
     min-width: 480px;
   }
+
   th, td {
     padding: .6rem .75rem;
     text-align: left;
     font-size: .9rem;
     white-space: nowrap;
   }
+
+  /* 🟢 FIX: sticky header properly aligned (no blank gap on PC) */
   th {
     position: sticky;
-    top: 3.1rem;
+    top: 0;
     z-index: 5;
     line-height: 1.2;
   }
+  thead tr:first-child th {
+    top: 3.1rem; /* applies only when stuck, not before scroll */
+  }
+
   td {
     border-bottom: 1px solid rgba(0,0,0,.2);
   }
@@ -200,119 +208,63 @@
   }
 
   const bossConfigs = {
-    // Alliance dynamic
-    "venatus": { name:"Venatus", factions:["Alliance"], type:"dynamic", respawnHours:10 },
-    "viorent": { name:"Viorent", factions:["Alliance"], type:"dynamic", respawnHours:10 },
-    "ego": { name:"Ego", factions:["Alliance"], type:"dynamic", respawnHours:21 },
-    "livera": { name:"Livera", factions:["Alliance"], type:"dynamic", respawnHours:24 },
-    "araneo": { name:"Araneo", factions:["Alliance"], type:"dynamic", respawnHours:24 },
-    "undomiel": { name:"Undomiel", factions:["Alliance"], type:"dynamic", respawnHours:24 },
-    "lady dalia": { name:"Lady Dalia", factions:["Alliance"], type:"dynamic", respawnHours:18 },
-    "general aquleus": { name:"General Aquleus", factions:["Alliance"], type:"dynamic", respawnHours:29 },
-    "amentis": { name:"Amentis", factions:["Alliance"], type:"dynamic", respawnHours:29 },
-    "baron braudmore": { name:"Baron Braudmore", factions:["Alliance"], type:"dynamic", respawnHours:32 },
+    "venatus":{name:"Venatus",factions:["Alliance"],type:"dynamic",respawnHours:10},
+    "viorent":{name:"Viorent",factions:["Alliance"],type:"dynamic",respawnHours:10},
+    "ego":{name:"Ego",factions:["Alliance"],type:"dynamic",respawnHours:21},
+    "livera":{name:"Livera",factions:["Alliance"],type:"dynamic",respawnHours:24},
+    "araneo":{name:"Araneo",factions:["Alliance"],type:"dynamic",respawnHours:24},
+    "undomiel":{name:"Undomiel",factions:["Alliance"],type:"dynamic",respawnHours:24},
+    "lady dalia":{name:"Lady Dalia",factions:["Alliance"],type:"dynamic",respawnHours:18},
+    "general aquleus":{name:"General Aquleus",factions:["Alliance"],type:"dynamic",respawnHours:29},
+    "amentis":{name:"Amentis",factions:["Alliance"],type:"dynamic",respawnHours:29},
+    "baron braudmore":{name:"Baron Braudmore",factions:["Alliance"],type:"dynamic",respawnHours:32},
 
-    // Alliance fixed
-    "clemantis": {
-      name:"Clemantis", factions:["Alliance"], type:"fixed",
-      schedules:[
-        { day:1, hour:11, minute:30 }, // Monday 11:30
-        { day:4, hour:19, minute:0 }   // Thursday 19:00
-      ]
-    },
-    "saphirus": {
-      name:"Saphirus", factions:["Alliance"], type:"fixed",
-      schedules:[
-        { day:0, hour:17, minute:0 },  // Sunday 17:00
-        { day:2, hour:11, minute:30 }  // Tuesday 11:30
-      ]
-    },
-    "neutro": {
-      name:"Neutro", factions:["Alliance"], type:"fixed",
-      schedules:[
-        { day:2, hour:19, minute:0 },  // Tuesday 19:00
-        { day:4, hour:11, minute:30 }  // Thursday 11:30
-      ]
-    },
-    "thymele": {
-      name:"Thymele", factions:["Alliance"], type:"fixed",
-      schedules:[
-        { day:1, hour:19, minute:0 },  // Monday 19:00
-        { day:3, hour:11, minute:30 }  // Wednesday 11:30
-      ]
-    },
+    "clemantis":{name:"Clemantis",factions:["Alliance"],type:"fixed",schedules:[
+      {day:1,hour:11,minute:30},{day:4,hour:19,minute:0}]},
+    "saphirus":{name:"Saphirus",factions:["Alliance"],type:"fixed",schedules:[
+      {day:0,hour:17,minute:0},{day:2,hour:11,minute:30}]},
+    "neutro":{name:"Neutro",factions:["Alliance"],type:"fixed",schedules:[
+      {day:2,hour:19,minute:0},{day:4,hour:11,minute:30}]},
+    "thymele":{name:"Thymele",factions:["Alliance"],type:"fixed",schedules:[
+      {day:1,hour:19,minute:0},{day:3,hour:11,minute:30}]},
 
-    // BloodMoon dynamic
-    "wannitas": { name:"Wannitas", factions:["BloodMoon"], type:"dynamic", respawnHours:48 },
-    "metus": { name:"Metus", factions:["BloodMoon"], type:"dynamic", respawnHours:48 },
-    "duplican": { name:"Duplican", factions:["BloodMoon"], type:"dynamic", respawnHours:48 },
-    "shuliar": { name:"Shuliar", factions:["BloodMoon"], type:"dynamic", respawnHours:35 },
-    "gareth": { name:"Gareth", factions:["BloodMoon"], type:"dynamic", respawnHours:32 },
-    "titore": { name:"Titore", factions:["BloodMoon"], type:"dynamic", respawnHours:37 },
-    "larba": { name:"Larba", factions:["BloodMoon"], type:"dynamic", respawnHours:35 },
-    "catena": { name:"Catena", factions:["BloodMoon"], type:"dynamic", respawnHours:35 },
-    "secreta": { name:"Secreta", factions:["BloodMoon"], type:"dynamic", respawnHours:62 },
-    "ordo": { name:"Ordo", factions:["BloodMoon"], type:"dynamic", respawnHours:62 },
-    "asta": { name:"Asta", factions:["BloodMoon"], type:"dynamic", respawnHours:62 },
-    "supore": { name:"Supore", factions:["BloodMoon"], type:"dynamic", respawnHours:62 },
+    "wannitas":{name:"Wannitas",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+    "metus":{name:"Metus",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+    "duplican":{name:"Duplican",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+    "shuliar":{name:"Shuliar",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+    "gareth":{name:"Gareth",factions:["BloodMoon"],type:"dynamic",respawnHours:32},
+    "titore":{name:"Titore",factions:["BloodMoon"],type:"dynamic",respawnHours:37},
+    "larba":{name:"Larba",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+    "catena":{name:"Catena",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+    "secreta":{name:"Secreta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+    "ordo":{name:"Ordo",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+    "asta":{name:"Asta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+    "supore":{name:"Supore",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
 
-    // BloodMoon fixed
-    "milavy": {
-      name:"Milavy", factions:["BloodMoon"], type:"fixed",
-      schedules:[{ day:6, hour:15, minute:0 }]   // Saturday 15:00
-    },
-    "ringor": {
-      name:"Ringor", factions:["BloodMoon"], type:"fixed",
-      schedules:[{ day:6, hour:17, minute:0 }]   // Saturday 17:00
-    },
-    "roderick": {
-      name:"Roderick", factions:["BloodMoon"], type:"fixed",
-      schedules:[{ day:5, hour:19, minute:0 }]   // Friday 19:00
-    },
-    "auraq": {
-      name:"Auraq", factions:["BloodMoon"], type:"fixed",
-      schedules:[
-        { day:5, hour:22, minute:0 },  // Friday 22:00
-        { day:3, hour:21, minute:0 }   // Wednesday 21:00
-      ]
-    },
-    "chaiflock": {
-      name:"Chaiflock", factions:["BloodMoon"], type:"fixed",
-      schedules:[{ day:6, hour:22, minute:0 }]   // Saturday 22:00
-    },
-    "benji": {
-      name:"Benji", factions:["BloodMoon"], type:"fixed",
-      schedules:[{ day:0, hour:21, minute:0 }]   // Sunday 21:00
-    },
+    "milavy":{name:"Milavy",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:6,hour:15,minute:0}]},
+    "ringor":{name:"Ringor",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:6,hour:17,minute:0}]},
+    "roderick":{name:"Roderick",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:5,hour:19,minute:0}]},
+    "auraq":{name:"Auraq",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:5,hour:22,minute:0},{day:3,hour:21,minute:0}]},
+    "chaiflock":{name:"Chaiflock",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:6,hour:22,minute:0}]},
+    "benji":{name:"Benji",factions:["BloodMoon"],type:"fixed",schedules:[
+      {day:0,hour:21,minute:0}]},
 
-    // Shared fixed (All / Alliance / BloodMoon)
-    "icaruthia": {
-      name:"Icaruthia", factions:["Alliance","BloodMoon"], type:"fixed",
-      schedules:[
-        { day:2, hour:21, minute:0 },  // Tuesday 21:00
-        { day:5, hour:21, minute:0 }   // Friday 21:00
-      ]
-    },
-    "motti": {
-      name:"Motti", factions:["Alliance","BloodMoon"], type:"fixed",
-      schedules:[
-        { day:3, hour:19, minute:0 },  // Wednesday 19:00
-        { day:6, hour:19, minute:0 }   // Saturday 19:00
-      ]
-    },
-    "nevaeh": {
-      name:"Nevaeh", factions:["Alliance","BloodMoon"], type:"fixed",
-      schedules:[
-        { day:0, hour:22, minute:0 }   // Sunday 22:00
-      ]
-    }
+    "icaruthia":{name:"Icaruthia",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+      {day:2,hour:21,minute:0},{day:5,hour:21,minute:0}]},
+    "motti":{name:"Motti",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+      {day:3,hour:19,minute:0},{day:6,hour:19,minute:0}]},
+    "nevaeh":{name:"Nevaeh",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+      {day:0,hour:22,minute:0}]}
   };
 
   let filterMode = localStorage.getItem("filterMode") || "All";
-  const factionFilterEl = document.getElementById("factionFilter");
-  factionFilterEl.value = filterMode;
-
-  factionFilterEl.addEventListener("change", e=>{
+  document.getElementById("factionFilter").value = filterMode;
+  document.getElementById("factionFilter").addEventListener("change", e=>{
     filterMode = e.target.value;
     localStorage.setItem("filterMode", filterMode);
     render();
@@ -333,20 +285,20 @@
 
   function formatDatePH(d){
     return d.toLocaleString("en-US", {
-      timeZone: "Asia/Manila",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
+      timeZone:"Asia/Manila",
+      month:"short",
+      day:"numeric",
+      hour:"numeric",
+      minute:"2-digit",
+      hour12:true
     });
   }
 
   function formatDateWithWeekdayPH(d){
     const main = formatDatePH(d);
     const weekday = d.toLocaleDateString("en-US", {
-      timeZone: "Asia/Manila",
-      weekday: "long"
+      timeZone:"Asia/Manila",
+      weekday:"long"
     });
     return `${main} (${weekday})`;
   }
@@ -355,175 +307,138 @@
     const now = new Date();
     const diff = target - now;
     if (diff <= 0) return "Now!";
-    const totalSec = Math.floor(diff / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
+    const ts = Math.floor(diff / 1000);
+    const h = Math.floor(ts / 3600);
+    const m = Math.floor((ts % 3600) / 60);
+    const s = ts % 60;
     return `${h}h ${m}m ${s}s`;
   }
 
   function getNextWeeklyOccurrence(day, hour, minute, now){
     const result = new Date(now);
     result.setSeconds(0,0);
-    result.setHours(hour, minute, 0, 0);
-
-    const currentDOW = result.getDay();
-    let diff = (day - currentDOW + 7) % 7;
-
-    if (diff === 0) {
-      if (result <= now) diff = 7;   // already passed today → next week
-      else diff = 0;                 // later today
-    }
-    result.setDate(result.getDate() + diff);
+    result.setHours(hour,minute,0,0);
+    const diff = (day - result.getDay() + 7) % 7;
+    if (diff === 0 && result <= now) result.setDate(result.getDate() + 7);
+    else result.setDate(result.getDate() + diff);
     return result;
   }
 
-  function findBossConfigFromSheetName(sheetName){
+  function findConfig(sheetName){
     const cleaned = normalizeBossName(sheetName);
     for (const cfg of Object.values(bossConfigs)){
-      const cfgNorm = normalizeBossName(cfg.name);
-      if (cleaned.includes(cfgNorm)) return cfg;
+      if (cleaned.includes(normalizeBossName(cfg.name))) return cfg;
     }
     return null;
   }
 
-  let bossRows = [];
+  let rows = [];
   let countdownTimer = null;
 
   async function fetchSheet(){
-    try{
+    try {
       const res = await fetch(sheetURL);
-      bossRows = await res.json();
-    }catch(e){
-      console.error("Error fetching sheet:", e);
-      bossRows = [];
+      rows = await res.json();
+    } catch {
+      rows = [];
     }
     render();
   }
 
-  function buildDynamicRespawns(now){
-    const latestDeaths = {};
-
-    bossRows.forEach(row=>{
-      const cfg = findBossConfigFromSheetName(row.Boss);
-      if (!cfg || cfg.type !== "dynamic") return;
-      if (!row.DeathTime) return;
-
-      const death = parseDeathTime(row.DeathTime);
-      if (isNaN(death)) return;
-
+  function buildDynamic(now){
+    const latest = {};
+    rows.forEach(r=>{
+      const cfg = findConfig(r.Boss);
+      if (!cfg || cfg.type !== "dynamic" || !r.DeathTime) return;
+      const d = parseDeathTime(r.DeathTime);
+      if (isNaN(d)) return;
       const key = normalizeBossName(cfg.name);
-      if (!latestDeaths[key] || death > latestDeaths[key]){
-        latestDeaths[key] = death;
-      }
+      if (!latest[key] || d > latest[key]) latest[key] = d;
     });
 
     const list = [];
-    Object.entries(latestDeaths).forEach(([normKey, death])=>{
+    Object.entries(latest).forEach(([key, death])=>{
       const cfg = Object.values(bossConfigs).find(
-        c => normalizeBossName(c.name) === normKey
+        c => normalizeBossName(c.name) === key
       );
-      if (!cfg || cfg.type !== "dynamic") return;
+      if (!cfg) return;
       const respawn = new Date(death.getTime() + cfg.respawnHours * 3600000);
-      list.push({ cfg, respawn });
+      list.push({cfg, respawn});
     });
-
     return list;
   }
 
   function render(){
     const now = new Date();
 
-    // --- dynamic ---
-    const dynamicAll = buildDynamicRespawns(now)
-      .filter(entry => passesFilter(entry.cfg))
+    const dyn = buildDynamic(now)
+      .filter(x=>passesFilter(x.cfg))
       .sort((a,b)=>a.respawn - b.respawn);
 
-    const dynamicBody = document.querySelector("#dynamicTable tbody");
-    dynamicBody.innerHTML = "";
-    dynamicAll.forEach(entry=>{
-      const diff = entry.respawn - now;
-      const hours = diff / 3600000;
+    const dynBody = document.querySelector("#dynamicTable tbody");
+    dynBody.innerHTML = "";
+    dyn.forEach(x=>{
+      const diff = x.respawn - now;
+      const hrs = diff / 3600000;
       let status;
-      if (diff <= 0){
-        status = "🟢 Alive";
-      } else if (hours < 1){
-        status = "🔴 Very Soon";
-      } else if (hours < 6){
-        status = "🟡 Soon";
-      } else {
-        const todayStr = now.toDateString();
-        const tomorrowStr = new Date(now.getTime() + 86400000).toDateString();
-        const respawnStr = entry.respawn.toDateString();
-        if (respawnStr === todayStr) status = "⏳ Today";
-        else if (respawnStr === tomorrowStr) status = "📅 Tomorrow";
-        else status = "📌 Scheduled";
-      }
+      if (diff <= 0) status = "🟢 Alive";
+      else if (hrs < 1) status = "🔴 Very Soon";
+      else if (hrs < 6) status = "🟡 Soon";
+      else status = (x.respawn.toDateString() === now.toDateString()) ? "⏳ Today" : "📌 Scheduled";
 
-      dynamicBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${entry.respawn.getTime()}">
-          <td>${entry.cfg.name}</td>
+      dynBody.insertAdjacentHTML("beforeend", `
+        <tr data-time="${x.respawn.getTime()}">
+          <td>${x.cfg.name}</td>
           <td>${status}</td>
-          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
-          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+          <td class="countdown">${formatCountdown(x.respawn)}</td>
         </tr>
       `);
     });
 
-    // --- fixed: today vs other ---
+    const todayDOW = now.getDay();
     const fixedToday = [];
     const fixedOther = [];
-    const todayDOW = now.getDay();
 
     Object.values(bossConfigs).forEach(cfg=>{
-      if (cfg.type !== "fixed" || !cfg.schedules) return;
-      if (!passesFilter(cfg)) return;
-
-      cfg.schedules.forEach(sch=>{
-        // today's upcoming spawns
-        if (sch.day === todayDOW){
-          const respawnToday = new Date(now);
-          respawnToday.setSeconds(0,0);
-          respawnToday.setHours(sch.hour, sch.minute, 0, 0);
-          if (respawnToday > now){
-            fixedToday.push({ cfg, respawn: respawnToday });
-          }
+      if (cfg.type !== "fixed" || !passesFilter(cfg)) return;
+      cfg.schedules.forEach(s=>{
+        if (s.day === todayDOW){
+          const t = new Date(now);
+          t.setSeconds(0,0);
+          t.setHours(s.hour,s.minute,0,0);
+          if (t > now) fixedToday.push({cfg, respawn:t});
         }
-
-        // next weekly occurrence for "other"
-        const next = getNextWeeklyOccurrence(sch.day, sch.hour, sch.minute, now);
-        const isToday = next.toDateString() === now.toDateString();
-        if (!isToday){
-          fixedOther.push({ cfg, respawn: next });
-        }
+        const next = getNextWeeklyOccurrence(s.day,s.hour,s.minute,now);
+        if (next.toDateString() !== now.toDateString()) fixedOther.push({cfg, respawn:next});
       });
     });
 
     fixedToday.sort((a,b)=>a.respawn - b.respawn);
     fixedOther.sort((a,b)=>a.respawn - b.respawn);
 
-    const fixedTodayBody = document.querySelector("#fixedToday tbody");
-    fixedTodayBody.innerHTML = "";
-    fixedToday.forEach(entry=>{
-      fixedTodayBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${entry.respawn.getTime()}">
-          <td>${entry.cfg.name}</td>
+    const ftBody = document.querySelector("#fixedToday tbody");
+    ftBody.innerHTML = "";
+    fixedToday.forEach(x=>{
+      ftBody.insertAdjacentHTML("beforeend", `
+        <tr data-time="${x.respawn.getTime()}">
+          <td>${x.cfg.name}</td>
           <td>⚡ Today</td>
-          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
-          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+          <td class="countdown">${formatCountdown(x.respawn)}</td>
         </tr>
       `);
     });
 
-    const fixedOtherBody = document.querySelector("#fixedOther tbody");
-    fixedOtherBody.innerHTML = "";
-    fixedOther.forEach(entry=>{
-      fixedOtherBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${entry.respawn.getTime()}">
-          <td>${entry.cfg.name}</td>
+    const foBody = document.querySelector("#fixedOther tbody");
+    foBody.innerHTML = "";
+    fixedOther.forEach(x=>{
+      foBody.insertAdjacentHTML("beforeend", `
+        <tr data-time="${x.respawn.getTime()}">
+          <td>${x.cfg.name}</td>
           <td>Scheduled</td>
-          <td>${formatDateWithWeekdayPH(entry.respawn)}</td>
-          <td class="countdown">${formatCountdown(entry.respawn)}</td>
+          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
+          <td class="countdown">${formatCountdown(x.respawn)}</td>
         </tr>
       `);
     });
@@ -540,31 +455,22 @@
     const now = new Date();
     document.querySelectorAll(".countdown").forEach(td=>{
       const tr = td.closest("tr");
-      if (!tr || !tr.dataset.time) return;
+      if (!tr) return;
       const t = new Date(Number(tr.dataset.time));
-      const diff = t - now;
       td.textContent = formatCountdown(t);
-
+      const diff = t - now;
       td.style.fontWeight = "normal";
       td.style.color = "";
       if (diff > 0){
         const h = diff / 3600000;
-        if (h < 1){
-          td.style.fontWeight = "700";
-          td.style.color = "#ff4c4c";
-        } else if (h < 6){
-          td.style.fontWeight = "700";
-          td.style.color = "#ffd700";
-        }
+        if (h < 1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
+        else if (h < 6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
       }
     });
 
     const nowTime = now.getTime();
     document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
-      const time = Number(tr.dataset.time);
-      if (time <= nowTime){
-        tr.remove();
-      }
+      if (Number(tr.dataset.time) <= nowTime) tr.remove();
     });
   }
 
@@ -577,8 +483,7 @@
   }
   setTheme(localStorage.getItem("theme") || "dark");
   themeToggle.addEventListener("click", ()=>{
-    const next = document.body.classList.contains("dark") ? "light" : "dark";
-    setTheme(next);
+    setTheme(document.body.classList.contains("dark") ? "light" : "dark");
   });
 
   fetchSheet();
