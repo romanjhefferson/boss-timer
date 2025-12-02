@@ -73,7 +73,7 @@ body.light .separator { border-color:#bbb; color:#333; }
 <script>
 const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* ---- Alliance bosses for UI label only ---- */
+/* ---- Alliance bosses for UI tag only ---- */
 const allianceBosses = new Set([
   "Ego","Clemantis","Livera","Araneo","Undomiel","Saphirus","Neutro","Lady Dalia",
   "General Aquleus","Thymele","Amentis","Baron Braudmore","Venatus","Viorent"
@@ -83,7 +83,7 @@ const allianceBosses = new Set([
 function normalizeBossName(boss){
   return String(boss)
     .normalize("NFKC")
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")    // zero-width
+    .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero width
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -102,7 +102,7 @@ document.getElementById("factionFilter").addEventListener("change", e=>{
   render();
 });
 
-/* ---- Filtering logic ---- */
+/* ---- Filtering ---- */
 function passesFilter(boss){
   const isAlliance = allianceBosses.has(boss);
   if(filterMode === "All") return true;
@@ -118,9 +118,7 @@ function parseDate(str){
   return new Date(Y, M-1, D, hh, mm);
 }
 function formatDate(d){
-  return d.toLocaleString('en-US',{
-    month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true
-  });
+  return d.toLocaleString('en-US',{ month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
 }
 function formatDateWithWeekday(d){
   return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`;
@@ -134,7 +132,7 @@ function formatCountdown(t){
   return `${h}h ${m}m ${s}s`;
 }
 
-/* ---- Respawn hours per boss ---- */
+/* ---- Respawn hours ---- */
 const respawnTimes = {
   "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
   "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
@@ -149,7 +147,7 @@ const fixedSchedules = {
   "Milavy":[{day:6,hour:15,minute:0}],
   "Ringor":[{day:6,hour:17,minute:0}],
   "Roderick":[{day:5,hour:19,minute:0}],
-  "Thymele":[{day:1,hour:19,minute:0},{day:3,hour:11,minute:30}],
+  "Thymele":[{day:1,hour:19,minute:0},{day:3,hour:11,minute:30}], /* CONFIRMED: Monday + Wednesday */
   "Auraq":[{day:3,hour:21,minute:0},{day:5,hour:22,minute:0}],
   "Chaiflock":[{day:6,hour:22,minute:0}],
   "Benji":[{day:0,hour:21,minute:0}],
@@ -165,22 +163,28 @@ async function fetchData(){
   render();
 }
 
+/* ---- Core rendering ---- */
 function render(){
   const now = new Date();
   const data = window.bossData || [];
   let dynamic=[], fixedUpcoming=[];
 
   data.forEach(r=>{
-    const key = normalizeBossName(r.Boss);
-    if(!key || !respawnTimes[key] || !r.DeathTime || !passesFilter(key)) return;
+    let key = normalizeBossName(r.Boss);
+    if(!key || !r.DeathTime || !passesFilter(key)) return;
+
+    /* Unicode / whitespace safe match */
+    const safeKey = Object.keys(respawnTimes).find(k => normalizeBossName(k) === key);
+    if(!safeKey) return;
 
     const death = parseDate(r.DeathTime);
     if(isNaN(death)) return;
 
-    const respawn = new Date(death.getTime() + respawnTimes[key] * 3600000);
-    dynamic.push({boss:key, respawn});
+    const respawn = new Date(death.getTime() + respawnTimes[safeKey] * 3600000);
+    dynamic.push({boss:safeKey, respawn});
   });
 
+  /* ---- Fixed ---- */
   Object.entries(fixedSchedules).forEach(([boss,schedules])=>{
     if(!passesFilter(boss)) return;
     schedules.forEach(sc=>{
@@ -214,6 +218,7 @@ function render(){
       </tr>`;
     }).join("");
 
+  /* ---- Fixed Respawns Today ---- */
   const todayFixed = fixedUpcoming.filter(f=>{
     const diff=f.respawn-now;
     return diff>0 && f.respawn.getDay()===now.getDay();
@@ -246,6 +251,7 @@ function render(){
   countdownInterval=setInterval(applyCountdownStyles,1000);
 }
 
+/* ---- Countdown + color logic ---- */
 function applyCountdownStyles(){
   const now=new Date();
   document.querySelectorAll(".countdown").forEach(td=>{
