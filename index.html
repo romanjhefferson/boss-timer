@@ -6,134 +6,50 @@
 <title>BloodMoon & Alliance Boss Timers</title>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    transition: background .3s, color .3s;
+  :root{
+    --max-width:1000px;
   }
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: .8rem;
-    padding: .8rem 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    box-shadow: 0 2px 6px rgba(0,0,0,.2);
-  }
+  body{font-family:Arial, sans-serif;margin:0;padding:0;transition:background .3s,color .3s;}
+  header{display:flex;align-items:center;justify-content:center;gap:.8rem;padding:.8rem 1rem;position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+  #factionFilter{padding:.3rem .6rem;border-radius:4px;font-size:.9rem;}
+  #themeToggle{background:none;border:1px solid;border-radius:6px;padding:.3rem .8rem;cursor:pointer;font-size:1.1rem;}
 
-  #factionFilter {
-    padding: .3rem .6rem;
-    border-radius: 4px;
-    font-size: .9rem;
-  }
-  #themeToggle {
-    background: none;
-    border: 1px solid;
-    border-radius: 6px;
-    padding: .3rem .8rem;
-    cursor: pointer;
-    font-size: 1.1rem;
-  }
+  main{padding:.5rem .5rem 2rem;max-width:var(--max-width);margin:0 auto;}
+  h3{margin-top:1.5rem;margin-bottom:.5rem;}
 
-  main {
-    padding: .5rem .5rem 2rem;
-    max-width: 1000px;
-    margin: 0 auto;
-  }
+  .table-wrapper{width:100%;overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;margin:.3rem 0 1rem;border-radius:8px;overflow:hidden;min-width:480px;}
+  th,td{padding:.6rem .75rem;text-align:left;font-size:.9rem;white-space:nowrap;}
+  /* NOTE: removed sticky header to avoid PC blank-gap glitch */
+  th{background:rgba(0,0,0,0.08);} 
+  td{border-bottom:1px solid rgba(0,0,0,.2);}
 
-  h3 {
-    margin-top: 1.5rem;
-    margin-bottom: .5rem;
-  }
+  .highlight-today{border:2px solid;box-shadow:0 0 8px rgba(0,0,0,.35);}
+  .separator{text-align:center;font-weight:bold;margin:1.5rem 0 .7rem;padding:.4rem;border-top:2px solid #ccc;border-bottom:2px solid #ccc;opacity:.85;}
 
-  .table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-  }
+  body.dark{background:#2c2c2c;color:#e0e0e0;}
+  body.dark header{background:#111;}
+  body.dark main{color:#e0e0e0;}
+  body.dark table{background:#3a3a3a;}
+  body.dark th{background:#444;}
+  body.dark td{border-bottom:1px solid #555;}
+  body.dark .separator{border-color:#777;color:#ddd;}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: .3rem 0 1rem;
-    border-radius: 8px;
-    overflow: hidden;
-    min-width: 480px;
-  }
-
-  th, td {
-    padding: .6rem .75rem;
-    text-align: left;
-    font-size: .9rem;
-    white-space: nowrap;
-  }
-
-  /* 🟢 FIX: sticky header properly aligned (no blank gap on PC) */
-  th {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    line-height: 1.2;
-  }
-  thead tr:first-child th {
-    top: 3.1rem; /* applies only when stuck, not before scroll */
-  }
-
-  td {
-    border-bottom: 1px solid rgba(0,0,0,.2);
-  }
-
-  .highlight-today {
-    border: 2px solid;
-    box-shadow: 0 0 8px rgba(0,0,0,.35);
-  }
-
-  .separator {
-    text-align: center;
-    font-weight: bold;
-    margin: 1.5rem 0 .7rem;
-    padding: .4rem;
-    border-top: 2px solid #ccc;
-    border-bottom: 2px solid #ccc;
-    opacity: .85;
-  }
-
-  body.dark {
-    background:#2c2c2c;
-    color:#e0e0e0;
-  }
-  body.dark header { background:#111; }
-  body.dark main { color:#e0e0e0; }
-  body.dark table { background:#3a3a3a; }
-  body.dark th { background:#444; }
-  body.dark td { border-bottom:1px solid #555; }
-  body.dark .separator { border-color:#777; color:#ddd; }
-
-  body.light {
-    background:#f5f5f5;
-    color:#222;
-  }
-  body.light header { background:#fff; }
-  body.light table { background:white; box-shadow:0 2px 6px rgba(0,0,0,.20); }
-  body.light th { background:#f0f0f0; }
-  body.light td { border-bottom:1px solid #ddd; }
-  body.light .separator { border-color:#bbb; color:#333; }
+  body.light{background:#f5f5f5;color:#222;}
+  body.light header{background:#fff;}
+  body.light table{background:white;box-shadow:0 2px 6px rgba(0,0,0,.20);}
+  body.light th{background:#f0f0f0;}
+  body.light td{border-bottom:1px solid #ddd;}
+  body.light .separator{border-color:#bbb;color:#333;}
 
   @media(max-width:600px){
-    header {
-      flex-direction: column;
-      gap: .55rem;
-    }
-    #factionFilter, #themeToggle {
-      width: 70%;
-      font-size: .9rem;
-    }
-    table {
-      min-width: 420px;
-    }
+    header{flex-direction:column;gap:.55rem;}
+    #factionFilter,#themeToggle{width:70%;font-size:.9rem;}
+    table{min-width:420px;}
   }
+
+  /* small visual improvement for thead */
+  thead th{font-weight:700;letter-spacing:.2px;}
 </style>
 </head>
 <body>
@@ -152,12 +68,7 @@
   <div class="table-wrapper">
     <table class="highlight-today" id="fixedToday">
       <thead>
-        <tr>
-          <th>Boss</th>
-          <th>Status</th>
-          <th>Respawn Time</th>
-          <th>Countdown</th>
-        </tr>
+        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -167,12 +78,7 @@
   <div class="table-wrapper">
     <table id="dynamicTable">
       <thead>
-        <tr>
-          <th>Boss</th>
-          <th>Status</th>
-          <th>Respawn Time</th>
-          <th>Countdown</th>
-        </tr>
+        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -183,12 +89,7 @@
   <div class="table-wrapper">
     <table id="fixedOther">
       <thead>
-        <tr>
-          <th>Boss</th>
-          <th>Status</th>
-          <th>Respawn Time</th>
-          <th>Countdown</th>
-        </tr>
+        <tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -196,299 +97,215 @@
 </main>
 
 <script>
-  const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+/* ---------- CONFIG ---------- */
+const sheetURL = "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-  function normalizeBossName(name){
-    return String(name || "")
-      .normalize("NFKC")
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+/* boss configs (names shown to user) */
+const bossConfigs = {
+  "venatus":{name:"Venatus",factions:["Alliance"],type:"dynamic",respawnHours:10},
+  "viorent":{name:"Viorent",factions:["Alliance"],type:"dynamic",respawnHours:10},
+  "ego":{name:"Ego",factions:["Alliance"],type:"dynamic",respawnHours:21},
+  "livera":{name:"Livera",factions:["Alliance"],type:"dynamic",respawnHours:24},
+  "araneo":{name:"Araneo",factions:["Alliance"],type:"dynamic",respawnHours:24},
+  "undomiel":{name:"Undomiel",factions:["Alliance"],type:"dynamic",respawnHours:24},
+  "lady dalia":{name:"Lady Dalia",factions:["Alliance"],type:"dynamic",respawnHours:18},
+  "general aquleus":{name:"General Aquleus",factions:["Alliance"],type:"dynamic",respawnHours:29},
+  "amentis":{name:"Amentis",factions:["Alliance"],type:"dynamic",respawnHours:29},
+  "baron braudmore":{name:"Baron Braudmore",factions:["Alliance"],type:"dynamic",respawnHours:32},
+
+  "clemantis":{name:"Clemantis",factions:["Alliance"],type:"fixed",schedules:[
+    {day:1,hour:11,minute:30},{day:4,hour:19,minute:0}]},
+  "saphirus":{name:"Saphirus",factions:["Alliance"],type:"fixed",schedules:[
+    {day:0,hour:17,minute:0},{day:2,hour:11,minute:30}]},
+  "neutro":{name:"Neutro",factions:["Alliance"],type:"fixed",schedules:[
+    {day:2,hour:19,minute:0},{day:4,hour:11,minute:30}]},
+  "thymele":{name:"Thymele",factions:["Alliance"],type:"fixed",schedules:[
+    {day:1,hour:19,minute:0},{day:3,hour:11,minute:30}]},
+
+  "wannitas":{name:"Wannitas",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+  "metus":{name:"Metus",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+  "duplican":{name:"Duplican",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
+  "shuliar":{name:"Shuliar",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+  "gareth":{name:"Gareth",factions:["BloodMoon"],type:"dynamic",respawnHours:32},
+  "titore":{name:"Titore",factions:["BloodMoon"],type:"dynamic",respawnHours:37},
+  "larba":{name:"Larba",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+  "catena":{name:"Catena",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
+  "secreta":{name:"Secreta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+  "ordo":{name:"Ordo",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+  "asta":{name:"Asta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+  "supore":{name:"Supore",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+
+  "milavy":{name:"Milavy",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:6,hour:15,minute:0}]},
+  "ringor":{name:"Ringor",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:6,hour:17,minute:0}]},
+  "roderick":{name:"Roderick",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:5,hour:19,minute:0}]},
+  "auraq":{name:"Auraq",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:5,hour:22,minute:0},{day:3,hour:21,minute:0}]},
+  "chaiflock":{name:"Chaiflock",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:6,hour:22,minute:0}]},
+  "benji":{name:"Benji",factions:["BloodMoon"],type:"fixed",schedules:[
+    {day:0,hour:21,minute:0}]},
+
+  "icaruthia":{name:"Icaruthia",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+    {day:2,hour:21,minute:0},{day:5,hour:21,minute:0}]},
+  "motti":{name:"Motti",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+    {day:3,hour:19,minute:0},{day:6,hour:19,minute:0}]},
+  "nevaeh":{name:"Nevaeh",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
+    {day:0,hour:22,minute:0}]}
+};
+
+/* ---------- utilities ---------- */
+function normalizeBossName(name){
+  return String(name || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function findConfig(sheetName){
+  const cleaned = normalizeBossName(sheetName);
+  for (const cfg of Object.values(bossConfigs)){
+    if (cleaned.includes(normalizeBossName(cfg.name))) return cfg;
   }
+  return null;
+}
 
-  const bossConfigs = {
-    "venatus":{name:"Venatus",factions:["Alliance"],type:"dynamic",respawnHours:10},
-    "viorent":{name:"Viorent",factions:["Alliance"],type:"dynamic",respawnHours:10},
-    "ego":{name:"Ego",factions:["Alliance"],type:"dynamic",respawnHours:21},
-    "livera":{name:"Livera",factions:["Alliance"],type:"dynamic",respawnHours:24},
-    "araneo":{name:"Araneo",factions:["Alliance"],type:"dynamic",respawnHours:24},
-    "undomiel":{name:"Undomiel",factions:["Alliance"],type:"dynamic",respawnHours:24},
-    "lady dalia":{name:"Lady Dalia",factions:["Alliance"],type:"dynamic",respawnHours:18},
-    "general aquleus":{name:"General Aquleus",factions:["Alliance"],type:"dynamic",respawnHours:29},
-    "amentis":{name:"Amentis",factions:["Alliance"],type:"dynamic",respawnHours:29},
-    "baron braudmore":{name:"Baron Braudmore",factions:["Alliance"],type:"dynamic",respawnHours:32},
+function parseDeathTime(str){
+  const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
+  if (!m) return new Date(NaN);
+  const [, MM, DD, YYYY, hh, mm] = m.map(Number);
+  return new Date(YYYY, MM-1, DD, hh, mm);
+}
 
-    "clemantis":{name:"Clemantis",factions:["Alliance"],type:"fixed",schedules:[
-      {day:1,hour:11,minute:30},{day:4,hour:19,minute:0}]},
-    "saphirus":{name:"Saphirus",factions:["Alliance"],type:"fixed",schedules:[
-      {day:0,hour:17,minute:0},{day:2,hour:11,minute:30}]},
-    "neutro":{name:"Neutro",factions:["Alliance"],type:"fixed",schedules:[
-      {day:2,hour:19,minute:0},{day:4,hour:11,minute:30}]},
-    "thymele":{name:"Thymele",factions:["Alliance"],type:"fixed",schedules:[
-      {day:1,hour:19,minute:0},{day:3,hour:11,minute:30}]},
+function formatDatePH(d){
+  return d.toLocaleString("en-US", { timeZone:"Asia/Manila", month:"short", day:"numeric", hour:"numeric", minute:"2-digit", hour12:true });
+}
+function formatDateWithWeekdayPH(d){
+  const main = formatDatePH(d);
+  const weekday = d.toLocaleDateString("en-US",{ timeZone:"Asia/Manila", weekday:"long" });
+  return `${main} (${weekday})`;
+}
+function formatCountdown(target){
+  const now = new Date(); const diff = target - now;
+  if (diff <= 0) return "Now!";
+  const ts = Math.floor(diff/1000);
+  const h = Math.floor(ts/3600); const m = Math.floor((ts%3600)/60); const s = ts%60;
+  return `${h}h ${m}m ${s}s`;
+}
 
-    "wannitas":{name:"Wannitas",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
-    "metus":{name:"Metus",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
-    "duplican":{name:"Duplican",factions:["BloodMoon"],type:"dynamic",respawnHours:48},
-    "shuliar":{name:"Shuliar",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
-    "gareth":{name:"Gareth",factions:["BloodMoon"],type:"dynamic",respawnHours:32},
-    "titore":{name:"Titore",factions:["BloodMoon"],type:"dynamic",respawnHours:37},
-    "larba":{name:"Larba",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
-    "catena":{name:"Catena",factions:["BloodMoon"],type:"dynamic",respawnHours:35},
-    "secreta":{name:"Secreta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
-    "ordo":{name:"Ordo",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
-    "asta":{name:"Asta",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
-    "supore":{name:"Supore",factions:["BloodMoon"],type:"dynamic",respawnHours:62},
+function getNextWeeklyOccurrence(day,hour,minute,now){
+  const result = new Date(now);
+  result.setSeconds(0,0); result.setHours(hour,minute,0,0);
+  let diff = (day - result.getDay() + 7)%7;
+  if (diff === 0 && result <= now) diff = 7;
+  result.setDate(result.getDate() + diff);
+  return result;
+}
 
-    "milavy":{name:"Milavy",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:6,hour:15,minute:0}]},
-    "ringor":{name:"Ringor",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:6,hour:17,minute:0}]},
-    "roderick":{name:"Roderick",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:5,hour:19,minute:0}]},
-    "auraq":{name:"Auraq",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:5,hour:22,minute:0},{day:3,hour:21,minute:0}]},
-    "chaiflock":{name:"Chaiflock",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:6,hour:22,minute:0}]},
-    "benji":{name:"Benji",factions:["BloodMoon"],type:"fixed",schedules:[
-      {day:0,hour:21,minute:0}]},
+/* ---------- filter & theme ---------- */
+let filterMode = localStorage.getItem("filterMode") || "All";
+const factionFilterEl = document.getElementById("factionFilter");
+factionFilterEl.value = filterMode;
+factionFilterEl.addEventListener("change", e=>{ filterMode = e.target.value; localStorage.setItem("filterMode", filterMode); render(); });
+function passesFilter(cfg){ if (!cfg) return false; if (filterMode === "All") return true; return cfg.factions && cfg.factions.includes(filterMode); }
 
-    "icaruthia":{name:"Icaruthia",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
-      {day:2,hour:21,minute:0},{day:5,hour:21,minute:0}]},
-    "motti":{name:"Motti",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
-      {day:3,hour:19,minute:0},{day:6,hour:19,minute:0}]},
-    "nevaeh":{name:"Nevaeh",factions:["Alliance","BloodMoon"],type:"fixed",schedules:[
-      {day:0,hour:22,minute:0}]}
-  };
+const themeToggle = document.getElementById("themeToggle");
+function setTheme(mode){ document.body.classList.remove("light","dark"); document.body.classList.add(mode); localStorage.setItem("theme", mode); themeToggle.textContent = mode === "dark" ? "🌙" : "☀️"; }
+setTheme(localStorage.getItem("theme") || "dark");
+themeToggle.addEventListener("click", ()=> setTheme(document.body.classList.contains("dark") ? "light" : "dark"));
 
-  let filterMode = localStorage.getItem("filterMode") || "All";
-  document.getElementById("factionFilter").value = filterMode;
-  document.getElementById("factionFilter").addEventListener("change", e=>{
-    filterMode = e.target.value;
-    localStorage.setItem("filterMode", filterMode);
-    render();
+/* ---------- sheet fetching & render ---------- */
+let rows = []; let countdownTimer = null;
+async function fetchSheet(){ try { const res = await fetch(sheetURL); rows = await res.json(); } catch(e){ rows = []; } render(); }
+function buildDynamic(now){
+  const last = {};
+  rows.forEach(r=>{
+    const cfg = findConfig(r.Boss);
+    if (!cfg || cfg.type !== "dynamic" || !r.DeathTime) return;
+    const d = parseDeathTime(r.DeathTime); if (isNaN(d)) return;
+    const key = normalizeBossName(cfg.name);
+    if (!last[key] || d > last[key]) last[key] = d;
+  });
+  const list = [];
+  Object.entries(last).forEach(([k,death])=>{
+    const cfg = Object.values(bossConfigs).find(c=>normalizeBossName(c.name)===k);
+    if (!cfg) return;
+    const respawn = new Date(death.getTime() + cfg.respawnHours*3600000);
+    list.push({cfg,respawn});
+  });
+  return list;
+}
+
+function render(){
+  const now = new Date();
+
+  // dynamic
+  const dyn = buildDynamic(now).filter(x=>passesFilter(x.cfg)).sort((a,b)=>a.respawn-b.respawn);
+  const dynBody = document.querySelector("#dynamicTable tbody"); dynBody.innerHTML = "";
+  dyn.forEach(x=>{
+    const diff = x.respawn - now; const hrs = diff/3600000;
+    let status;
+    if (diff <= 0) status = "🟢 Alive"; else if (hrs < 1) status = "🔴 Very Soon"; else if (hrs < 6) status = "🟡 Soon";
+    else { const t = x.respawn.toDateString(); status = (t === now.toDateString()) ? "⏳ Today" : "📌 Scheduled"; }
+    dynBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>${status}</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`);
   });
 
-  function passesFilter(cfg){
-    if (!cfg) return false;
-    if (filterMode === "All") return true;
-    return cfg.factions && cfg.factions.includes(filterMode);
-  }
-
-  function parseDeathTime(str){
-    const m = String(str || "").trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
-    if (!m) return new Date(NaN);
-    const [, MM, DD, YYYY, hh, mm] = m.map(Number);
-    return new Date(YYYY, MM-1, DD, hh, mm);
-  }
-
-  function formatDatePH(d){
-    return d.toLocaleString("en-US", {
-      timeZone:"Asia/Manila",
-      month:"short",
-      day:"numeric",
-      hour:"numeric",
-      minute:"2-digit",
-      hour12:true
-    });
-  }
-
-  function formatDateWithWeekdayPH(d){
-    const main = formatDatePH(d);
-    const weekday = d.toLocaleDateString("en-US", {
-      timeZone:"Asia/Manila",
-      weekday:"long"
-    });
-    return `${main} (${weekday})`;
-  }
-
-  function formatCountdown(target){
-    const now = new Date();
-    const diff = target - now;
-    if (diff <= 0) return "Now!";
-    const ts = Math.floor(diff / 1000);
-    const h = Math.floor(ts / 3600);
-    const m = Math.floor((ts % 3600) / 60);
-    const s = ts % 60;
-    return `${h}h ${m}m ${s}s`;
-  }
-
-  function getNextWeeklyOccurrence(day, hour, minute, now){
-    const result = new Date(now);
-    result.setSeconds(0,0);
-    result.setHours(hour,minute,0,0);
-    const diff = (day - result.getDay() + 7) % 7;
-    if (diff === 0 && result <= now) result.setDate(result.getDate() + 7);
-    else result.setDate(result.getDate() + diff);
-    return result;
-  }
-
-  function findConfig(sheetName){
-    const cleaned = normalizeBossName(sheetName);
-    for (const cfg of Object.values(bossConfigs)){
-      if (cleaned.includes(normalizeBossName(cfg.name))) return cfg;
-    }
-    return null;
-  }
-
-  let rows = [];
-  let countdownTimer = null;
-
-  async function fetchSheet(){
-    try {
-      const res = await fetch(sheetURL);
-      rows = await res.json();
-    } catch {
-      rows = [];
-    }
-    render();
-  }
-
-  function buildDynamic(now){
-    const latest = {};
-    rows.forEach(r=>{
-      const cfg = findConfig(r.Boss);
-      if (!cfg || cfg.type !== "dynamic" || !r.DeathTime) return;
-      const d = parseDeathTime(r.DeathTime);
-      if (isNaN(d)) return;
-      const key = normalizeBossName(cfg.name);
-      if (!latest[key] || d > latest[key]) latest[key] = d;
-    });
-
-    const list = [];
-    Object.entries(latest).forEach(([key, death])=>{
-      const cfg = Object.values(bossConfigs).find(
-        c => normalizeBossName(c.name) === key
-      );
-      if (!cfg) return;
-      const respawn = new Date(death.getTime() + cfg.respawnHours * 3600000);
-      list.push({cfg, respawn});
-    });
-    return list;
-  }
-
-  function render(){
-    const now = new Date();
-
-    const dyn = buildDynamic(now)
-      .filter(x=>passesFilter(x.cfg))
-      .sort((a,b)=>a.respawn - b.respawn);
-
-    const dynBody = document.querySelector("#dynamicTable tbody");
-    dynBody.innerHTML = "";
-    dyn.forEach(x=>{
-      const diff = x.respawn - now;
-      const hrs = diff / 3600000;
-      let status;
-      if (diff <= 0) status = "🟢 Alive";
-      else if (hrs < 1) status = "🔴 Very Soon";
-      else if (hrs < 6) status = "🟡 Soon";
-      else status = (x.respawn.toDateString() === now.toDateString()) ? "⏳ Today" : "📌 Scheduled";
-
-      dynBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${x.respawn.getTime()}">
-          <td>${x.cfg.name}</td>
-          <td>${status}</td>
-          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
-          <td class="countdown">${formatCountdown(x.respawn)}</td>
-        </tr>
-      `);
-    });
-
-    const todayDOW = now.getDay();
-    const fixedToday = [];
-    const fixedOther = [];
-
-    Object.values(bossConfigs).forEach(cfg=>{
-      if (cfg.type !== "fixed" || !passesFilter(cfg)) return;
-      cfg.schedules.forEach(s=>{
-        if (s.day === todayDOW){
-          const t = new Date(now);
-          t.setSeconds(0,0);
-          t.setHours(s.hour,s.minute,0,0);
-          if (t > now) fixedToday.push({cfg, respawn:t});
-        }
-        const next = getNextWeeklyOccurrence(s.day,s.hour,s.minute,now);
-        if (next.toDateString() !== now.toDateString()) fixedOther.push({cfg, respawn:next});
-      });
-    });
-
-    fixedToday.sort((a,b)=>a.respawn - b.respawn);
-    fixedOther.sort((a,b)=>a.respawn - b.respawn);
-
-    const ftBody = document.querySelector("#fixedToday tbody");
-    ftBody.innerHTML = "";
-    fixedToday.forEach(x=>{
-      ftBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${x.respawn.getTime()}">
-          <td>${x.cfg.name}</td>
-          <td>⚡ Today</td>
-          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
-          <td class="countdown">${formatCountdown(x.respawn)}</td>
-        </tr>
-      `);
-    });
-
-    const foBody = document.querySelector("#fixedOther tbody");
-    foBody.innerHTML = "";
-    fixedOther.forEach(x=>{
-      foBody.insertAdjacentHTML("beforeend", `
-        <tr data-time="${x.respawn.getTime()}">
-          <td>${x.cfg.name}</td>
-          <td>Scheduled</td>
-          <td>${formatDateWithWeekdayPH(x.respawn)}</td>
-          <td class="countdown">${formatCountdown(x.respawn)}</td>
-        </tr>
-      `);
-    });
-
-    document.getElementById("fixedSeparator").style.display =
-      fixedOther.length ? "block" : "none";
-
-    if (countdownTimer) clearInterval(countdownTimer);
-    updateCountdowns();
-    countdownTimer = setInterval(updateCountdowns, 1000);
-  }
-
-  function updateCountdowns(){
-    const now = new Date();
-    document.querySelectorAll(".countdown").forEach(td=>{
-      const tr = td.closest("tr");
-      if (!tr) return;
-      const t = new Date(Number(tr.dataset.time));
-      td.textContent = formatCountdown(t);
-      const diff = t - now;
-      td.style.fontWeight = "normal";
-      td.style.color = "";
-      if (diff > 0){
-        const h = diff / 3600000;
-        if (h < 1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
-        else if (h < 6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
+  // fixed today / other
+  const todayDOW = now.getDay(); const fixedToday = []; const fixedOther = [];
+  Object.values(bossConfigs).forEach(cfg=>{
+    if (cfg.type !== "fixed" || !passesFilter(cfg)) return;
+    cfg.schedules.forEach(s=>{
+      // today's upcoming
+      if (s.day === todayDOW){
+        const t = new Date(now); t.setSeconds(0,0); t.setHours(s.hour,s.minute,0,0);
+        if (t > now) fixedToday.push({cfg,respawn:t});
       }
+      // next occurrence
+      const next = getNextWeeklyOccurrence(s.day,s.hour,s.minute,now);
+      if (next.toDateString() !== now.toDateString()) fixedOther.push({cfg,respawn:next});
     });
-
-    const nowTime = now.getTime();
-    document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
-      if (Number(tr.dataset.time) <= nowTime) tr.remove();
-    });
-  }
-
-  const themeToggle = document.getElementById("themeToggle");
-  function setTheme(mode){
-    document.body.classList.remove("light","dark");
-    document.body.classList.add(mode);
-    localStorage.setItem("theme", mode);
-    themeToggle.textContent = mode === "dark" ? "🌙" : "☀️";
-  }
-  setTheme(localStorage.getItem("theme") || "dark");
-  themeToggle.addEventListener("click", ()=>{
-    setTheme(document.body.classList.contains("dark") ? "light" : "dark");
   });
 
-  fetchSheet();
-  setInterval(fetchSheet, 60000);
-</script>
+  fixedToday.sort((a,b)=>a.respawn-b.respawn);
+  fixedOther.sort((a,b)=>a.respawn-b.respawn);
 
+  const ftBody = document.querySelector("#fixedToday tbody"); ftBody.innerHTML = "";
+  fixedToday.forEach(x=> ftBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>⚡ Today</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`));
+
+  const foBody = document.querySelector("#fixedOther tbody"); foBody.innerHTML = "";
+  fixedOther.forEach(x=> foBody.insertAdjacentHTML("beforeend", `<tr data-time="${x.respawn.getTime()}"><td>${x.cfg.name}</td><td>Scheduled</td><td>${formatDateWithWeekdayPH(x.respawn)}</td><td class="countdown">${formatCountdown(x.respawn)}</td></tr>`));
+
+  document.getElementById("fixedSeparator").style.display = fixedOther.length ? "block" : "none";
+
+  if (countdownTimer) clearInterval(countdownTimer);
+  updateCountdowns();
+  countdownTimer = setInterval(updateCountdowns, 1000);
+}
+
+function updateCountdowns(){
+  const now = new Date();
+  document.querySelectorAll(".countdown").forEach(td=>{
+    const tr = td.closest("tr"); if (!tr) return;
+    const t = new Date(Number(tr.dataset.time)); td.textContent = formatCountdown(t);
+    td.style.fontWeight = "normal"; td.style.color = "";
+    const diff = t - now;
+    if (diff > 0){
+      const h = diff/3600000;
+      if (h < 1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
+      else if (h < 6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
+    }
+  });
+  const nowTime = now.getTime();
+  document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{ if (Number(tr.dataset.time) <= nowTime) tr.remove(); });
+}
+
+/* start */
+fetchSheet(); setInterval(fetchSheet, 60000);
+
+</script>
 </body>
 </html>
