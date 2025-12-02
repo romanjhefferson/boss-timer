@@ -136,7 +136,11 @@ function formatCountdown(t) {
   return `${h}h ${m}m ${s}s`;
 }
 
-const respawnTimes = { "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,"General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,"Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62 };
+const respawnTimes = {
+  "Venatus":10,"Viorent":10,"Araneo":24,"Undomiel":24,"Lady Dalia":18,"Amentis":29,"Ego":21,"Livera":24,
+  "General Aquleus":29,"Baron Braudmore":32,"Wannitas":48,"Metus":48,"Duplican":48,"Shuliar":35,"Gareth":32,
+  "Titore":37,"Larba":35,"Catena":35,"Secreta":62,"Ordo":62,"Asta":62,"Supore":62
+};
 
 const fixedSchedules = {
   "Clemantis":[{day:1,hour:11,minute:30},{day:4,hour:19,minute:0}],
@@ -169,6 +173,7 @@ function render() {
   let dynamic = [];
   let fixedUpcoming = [];
 
+  // dynamic bosses
   data.forEach(row => {
     const boss = row.Boss?.trim();
     if (!boss || !respawnTimes[boss] || !row.DeathTime) return;
@@ -178,6 +183,7 @@ function render() {
     dynamic.push({ boss, respawn });
   });
 
+  // fixed schedule bosses
   Object.entries(fixedSchedules).forEach(([boss, s]) => {
     if (!passesFilter(boss)) return;
     s.forEach(sc => {
@@ -185,7 +191,6 @@ function render() {
       respawn.setDate(now.getDate() + ((sc.day - now.getDay() + 7) % 7));
       respawn.setHours(sc.hour, sc.minute, 0, 0);
 
-      // FIX: keep bosses today in Fixed Respawns Today even if time already passed
       const isScheduledToday = now.getDay() === sc.day;
       if (!isScheduledToday && respawn < now) respawn.setDate(respawn.getDate() + 7);
 
@@ -193,10 +198,13 @@ function render() {
     });
   });
 
-  dynamic = dynamic.filter(r => !(r.boss in fixedSchedules));
+  // make sure fixed bosses (by name) are not in dynamic
+  dynamic = dynamic.filter(r => !fixedSchedules.hasOwnProperty(r.boss));
+
   dynamic.sort((a,b) => a.respawn - b.respawn);
   fixedUpcoming.sort((a,b) => a.respawn - b.respawn);
 
+  // DYNAMIC table
   document.querySelector("#upcoming tbody").innerHTML =
     dynamic.map(r => {
       const diff = r.respawn - now;
@@ -215,16 +223,41 @@ function render() {
       </tr>`;
     }).join("");
 
-  const todayFixed = fixedUpcoming.filter(f => f.respawn.toDateString() === now.toDateString());
+  // FIXED tables (with 10-minute grace after Alive)
+  const todayFixedRaw = fixedUpcoming.filter(f => f.respawn.toDateString() === now.toDateString());
   const laterFixed = fixedUpcoming.filter(f => f.respawn.toDateString() !== now.toDateString());
+
+  const todayFixed = [];
+  todayFixedRaw.forEach(r => {
+    const diff = r.respawn - now;
+    if (diff >= 0) {
+      todayFixed.push({ ...r, state: "upcoming" });
+    } else {
+      const minutesPast = (now - r.respawn) / 60000;
+      if (minutesPast <= 10) todayFixed.push({ ...r, state: "alive" });
+      // else drop (already spawned >10 mins ago)
+    }
+  });
 
   document.querySelector("#fixedSoon tbody").innerHTML =
     todayFixed.map(r => {
+      const ts = r.respawn.getTime();
+      let status, rowClass = "";
       const diff = r.respawn - now;
-      const alive = diff <= 0;
-      return `<tr class="${alive ? "alive-fixed" : ""}" data-time="${r.respawn.getTime()}">
+
+      if (r.state === "alive") {
+        status = "🟢 Alive (Today)";
+        rowClass = "alive-fixed";
+      } else {
+        const h = diff / 3600000;
+        status = "⚡ Today";
+        if (h < 1) rowClass = "next-highlight-red";
+        else if (h < 6) rowClass = "next-highlight-yellow";
+      }
+
+      return `<tr class="${rowClass}" data-time="${ts}">
         <td>${displayName(r.boss)}</td>
-        <td>${alive ? "🟢 Alive (Today)" : "⚡ Today"}</td>
+        <td>${status}</td>
         <td>${formatDateWithWeekday(r.respawn)}</td>
         <td class="countdown">${formatCountdown(r.respawn)}</td>
       </tr>`;
@@ -244,43 +277,43 @@ function render() {
   document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* HIGHLIGHT — only in Dynamic Respawns & Other Fixed (never in Fixed Today) */
-  document.querySelectorAll("tr").forEach(tr =>
-    tr.classList.remove("next-highlight-yellow","next-highlight-red")
-  );
-
-  /* only select dynamic & other fixed */
-  const allRows = [...document.querySelectorAll("#upcoming tr[data-time], #fixed tr[data-time]")];
-  const future = allRows
-    .map(tr => ({ tr, t: Number(tr.getAttribute("data-time")) }))
-    .filter(r => r.t > now.getTime())   // exclude Alive
-    .sort((a,b) => a.t - b.t);
-
-  if (future.length) {
-    const next = future[0];
-    const diff = next.t - now.getTime();
-    const hours = diff / 3600000;
-
-    if (hours < 1) next.tr.classList.add("next-highlight-red");
-    else if (hours < 6) next.tr.classList.add("next-highlight-yellow");
-  }
-
-  document.querySelectorAll(".countdown").forEach(td => {
-    const t = new Date(Number(td.closest("tr").dataset.time));
-    td.textContent = formatCountdown(t);
-    td.classList.remove("countdown-soon","countdown-very-soon");
-    const diff = t - now;
-    if (diff > 0) {
-      const h = diff / 3600000;
-      if (h < 1) td.classList.add("countdown-very-soon");
-      else if (h < 6) td.classList.add("countdown-soon");
-    }
-  });
-
+  // start / restart live countdown + row colors
   if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => render(), 1000);
+  applyCountdownStyles();             // run once immediately
+  countdownInterval = setInterval(applyCountdownStyles, 1000); // then keep updating
 }
 
+function applyCountdownStyles() {
+  const now = new Date();
+  document.querySelectorAll(".countdown").forEach(td => {
+    const row = td.closest("tr");
+    const tMs = Number(row.dataset.time);
+    if (!tMs) return;
+    const t = new Date(tMs);
+
+    const diff = t - now;
+    td.textContent = formatCountdown(t);
+
+    // reset styles
+    td.classList.remove("countdown-soon","countdown-very-soon");
+    row.classList.remove("next-highlight-yellow","next-highlight-red");
+
+    if (diff > 0) {
+      const h = diff / 3600000;
+
+      // text color
+      if (h < 1) td.classList.add("countdown-very-soon");
+      else if (h < 6) td.classList.add("countdown-soon");
+
+      // row color
+      if (h < 1) row.classList.add("next-highlight-red");
+      else if (h < 6) row.classList.add("next-highlight-yellow");
+    }
+    // if diff <= 0: keep whatever class it already had (e.g., alive-fixed)
+  });
+}
+
+// initial load + periodic data refresh
 fetchData();
 setInterval(render, 60000);
 
@@ -293,7 +326,9 @@ function setTheme(t) {
   themeToggleBtn.textContent = t === "dark" ? "🌙" : "☀️";
 }
 setTheme(localStorage.getItem("theme") || "dark");
-themeToggleBtn.addEventListener("click", () => setTheme(document.body.classList.contains("dark") ? "light" : "dark"));
+themeToggleBtn.addEventListener("click", () =>
+  setTheme(document.body.classList.contains("dark") ? "light" : "dark")
+);
 </script>
 
 </body>
