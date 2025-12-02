@@ -184,7 +184,11 @@ function render() {
       const respawn = new Date(now);
       respawn.setDate(now.getDate() + ((sc.day - now.getDay() + 7) % 7));
       respawn.setHours(sc.hour, sc.minute, 0, 0);
-      if (respawn < now) respawn.setDate(respawn.getDate() + 7);
+
+      // FIX: keep bosses today in Fixed Respawns Today even if time already passed
+      const isScheduledToday = now.getDay() === sc.day;
+      if (!isScheduledToday && respawn < now) respawn.setDate(respawn.getDate() + 7);
+
       fixedUpcoming.push({ boss, respawn });
     });
   });
@@ -240,12 +244,13 @@ function render() {
   document.getElementById("fixedSoon").style.display = todayFixed.length ? "table" : "none";
   document.getElementById("separator").style.display = laterFixed.length ? "block" : "none";
 
-  /* Highlight closest upcoming respawn across ALL future rows (exclude Alive) */
+  /* HIGHLIGHT — only in Dynamic Respawns & Other Fixed (never in Fixed Today) */
   document.querySelectorAll("tr").forEach(tr =>
     tr.classList.remove("next-highlight-yellow","next-highlight-red")
   );
 
-  const allRows = [...document.querySelectorAll("tr[data-time]")];
+  /* only select dynamic & other fixed */
+  const allRows = [...document.querySelectorAll("#upcoming tr[data-time], #fixed tr[data-time]")];
   const future = allRows
     .map(tr => ({ tr, t: Number(tr.getAttribute("data-time")) }))
     .filter(r => r.t > now.getTime())   // exclude Alive
