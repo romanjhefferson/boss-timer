@@ -79,14 +79,17 @@ const allianceBosses = new Set([
   "General Aquleus","Thymele","Amentis","Baron Braudmore","Venatus","Viorent"
 ]);
 
-/* Prevent Titore from being mislabeled — do not put it here */
-function displayName(boss){ return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss; }
+function displayName(boss){
+  return allianceBosses.has(boss) ? `${boss} (Alliance)` : boss;
+}
 
 /* Filter */
 let filterMode=localStorage.getItem("filterMode")||"All";
 document.getElementById("factionFilter").value=filterMode;
 document.getElementById("factionFilter").addEventListener("change",e=>{
-  filterMode=e.target.value; localStorage.setItem("filterMode",filterMode); render();
+  filterMode=e.target.value;
+  localStorage.setItem("filterMode",filterMode);
+  render();
 });
 function passesFilter(boss){
   const isAlliance=allianceBosses.has(boss);
@@ -96,12 +99,22 @@ function passesFilter(boss){
 }
 
 /* Date formatting */
-function formatDate(d){ return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}); }
-function formatDateWithWeekday(d){ return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`; }
+function formatDate(d){
+  return d.toLocaleString('en-US',{
+    month:'short',day:'numeric',
+    hour:'numeric',minute:'2-digit',
+    hour12:true
+  });
+}
+function formatDateWithWeekday(d){
+  return `${formatDate(d)} (${d.toLocaleDateString('en-US',{weekday:'long'})})`;
+}
 function formatCountdown(t){
   const diff=t-new Date();
   if(diff<=0) return "Now!";
-  const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+  const h=Math.floor(diff/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
   return `${h}h ${m}m ${s}s`;
 }
 
@@ -129,26 +142,34 @@ const fixedSchedules = {
   "Nevaea":[{day:0,hour:22,minute:0}]
 };
 
-/* Safe manual date parser */
+/* ✅ Correct manual date parser: MM/DD/YYYY HH:MM */
 function parseDate(str){
-  str=String(str).trim();
-  const p=str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
+  str = String(str).trim();
+  const p = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
   if(!p) return new Date(NaN);
-  const [,M,D,Y,hh,mm]=p.map(Number);
-  return new Date(Y,M-1,hh,mm);
+  const [, M, D, Y, hh, mm] = p.map(Number);
+  // year, monthIndex, day, hour, minute
+  return new Date(Y, M-1, D, hh, mm);
 }
 
 let countdownInterval;
-async function fetchData(){ const res=await fetch(sheetURL); window.bossData=await res.json(); render(); }
+async function fetchData(){
+  const res = await fetch(sheetURL);
+  window.bossData = await res.json();
+  render();
+}
 
 function render(){
-  const now=new Date(), data=window.bossData||[];
+  const now=new Date();
+  const data=window.bossData||[];
   let dynamic=[], fixedUpcoming=[];
 
   data.forEach(r=>{
     let boss = String(r.Boss || "")
-      .normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"")
-      .replace(/\s+/g," ").trim();
+      .normalize("NFKC")
+      .replace(/[\u200B-\u200D\uFEFF]/g,"")
+      .replace(/\s+/g," ")
+      .trim();
 
     if(!boss || !respawnTimes[boss] || !r.DeathTime || !passesFilter(boss)) return;
 
@@ -176,13 +197,18 @@ function render(){
   /* Dynamic */
   document.querySelector("#upcoming tbody").innerHTML =
     dynamic.map(r=>{
-      const diff=r.respawn-now, h=diff/3600000;
-      let status = diff<=0 ? "🟢 Alive"
-          : h<1? "🔴 Very Soon"
-          : h<6? "🟡 Soon"
-          : r.respawn.toDateString()===now.toDateString()? "⏳ Today"
-          : r.respawn.toDateString()===new Date(now.getTime()+86400000).toDateString()? "📅 Tomorrow"
-          : "📌 Scheduled";
+      const diff=r.respawn-now;
+      const h=diff/3600000;
+      let status =
+        diff<=0 ? "🟢 Alive" :
+        h<1     ? "🔴 Very Soon" :
+        h<6     ? "🟡 Soon" :
+        r.respawn.toDateString()===now.toDateString()
+                 ? "⏳ Today" :
+        r.respawn.toDateString()===new Date(now.getTime()+86400000).toDateString()
+                 ? "📅 Tomorrow" :
+                   "📌 Scheduled";
+
       return `<tr data-time="${r.respawn.getTime()}">
         <td>${displayName(r.boss)}</td>
         <td>${status}</td>
@@ -206,7 +232,7 @@ function render(){
       </tr>
     `).join("");
 
-  /* Fixed Later */
+  /* Fixed later */
   const laterFixed=fixedUpcoming.filter(f=>f.respawn.getDay()!==now.getDay());
   document.querySelector("#fixed tbody").innerHTML =
     laterFixed.map(r=>`
@@ -228,12 +254,22 @@ function render(){
 function applyCountdownStyles(){
   const now=new Date();
   document.querySelectorAll(".countdown").forEach(td=>{
-    const t=new Date(Number(td.closest("tr").dataset.time)), diff=t-now, h=diff/3600000;
+    const t=new Date(Number(td.closest("tr").dataset.time));
+    const diff=t-now;
+    const h=diff/3600000;
+
     td.textContent = diff>0 ? formatCountdown(t) : "Now!";
-    td.style.fontWeight="normal"; td.style.color="";
+    td.style.fontWeight="normal";
+    td.style.color="";
+
     if(diff>0){
-      if(h<1){ td.style.fontWeight="700"; td.style.color="#ff4c4c"; }
-      else if(h<6){ td.style.fontWeight="700"; td.style.color="#ffd700"; }
+      if(h<1){
+        td.style.fontWeight="700";
+        td.style.color="#ff4c4c";
+      }else if(h<6){
+        td.style.fontWeight="700";
+        td.style.color="#ffd700";
+      }
     }
   });
 
