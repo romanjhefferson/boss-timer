@@ -14,7 +14,6 @@ body {
   font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
   margin: 0; padding: 0;
   transition: background .25s, color .25s;
-  -webkit-font-smoothing:antialiased;
 }
 
 /* ---------------- HEADER ---------------- */
@@ -28,15 +27,16 @@ header{
   top:0;
   z-index:20;
   background: rgba(255,255,255,0.02);
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
   backdrop-filter: blur(4px);
 }
 #title { font-weight:600; margin-right:1rem; }
+
 #factionFilter {
   padding:.35rem .7rem;
   border-radius:8px;
   font-size:.95rem;
 }
+
 #themeToggle {
   background:none;
   border:1px solid rgba(0,0,0,.2);
@@ -47,22 +47,22 @@ header{
 
 /* ---------------- LEGEND ---------------- */
 #legend {
-  text-align: center;
-  font-size: 0.9rem;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  opacity: 0.85;
+  text-align:center;
+  font-size:0.9rem;
+  margin-top:4px;
+  margin-bottom:8px;
+  opacity:0.85;
 }
 
-body.dark #legend {
-  color: #e6eef8;
+/* NEW: BloodMoon SVG styling */
+.bm-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  vertical-align: middle;
+  margin-right: .45rem;
 }
 
-body.light #legend {
-  color: #222;
-}
-
-/* ---------------- TABLE LAYOUT ---------------- */
+/* ---------------- TABLE & MODE STYLES ---------------- */
 main{ max-width:var(--max-width); margin:0 auto; padding:.8rem; }
 h3{ margin:1.1rem 0 .45rem; font-size:1.05rem; display:flex; align-items:center; gap:.5rem; }
 
@@ -85,64 +85,22 @@ thead th{
 }
 tbody td{ border-bottom:1px solid rgba(0,0,0,0.06); }
 
-/* Hover */
 tbody tr:hover { background: rgba(0,0,0,0.03); }
 
-/* ---------------- ZEBRA ROWS ---------------- */
-/* Light Mode */
-body.light table tbody tr:nth-child(odd) {
-  background: rgba(0,0,0,0.04);
-}
-body.light table tbody tr:nth-child(even) {
-  background: rgba(0,0,0,0.08);
-}
+/* Zebra rows */
+body.light table tbody tr:nth-child(odd) { background: rgba(0,0,0,0.04); }
+body.light table tbody tr:nth-child(even) { background: rgba(0,0,0,0.08); }
+body.dark table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.04); }
+body.dark table tbody tr:nth-child(even) { background: rgba(255,255,255,0.07); }
 
-/* Dark Mode */
-body.dark table tbody tr:nth-child(odd) {
-  background: rgba(255,255,255,0.04);
-}
-body.dark table tbody tr:nth-child(even) {
-  background: rgba(255,255,255,0.07);
-}
+/* Status Color Rows */
+.row-soon td, .row-soon .status-pill { color:#ffb300 !important; }
+body.light .row-soon td { color:#b36b00 !important; }
 
-/* ---------------- CLEAN STATUS LABEL ---------------- */
-.status-pill {
-  font-weight:600;
-  font-size:.85rem;
-  padding:0;
-  margin:0;
-  background:none !important;
-  border:none;
-  color:inherit !important;
-}
+.row-verysoon td, .row-verysoon .status-pill { color:#ff6b6b !important; }
+body.light .row-verysoon td { color:#b33a3a !important; }
 
-/* ---------------- ROW TEXT COLORS ---------------- */
-.row-soon td,
-.row-soon .status-pill {
-  color: #ffb300 !important;
-}
-body.light .row-soon td,
-body.light .row-soon .status-pill {
-  color: #b36b00 !important;
-}
-
-.row-verysoon td,
-.row-verysoon .status-pill {
-  color: #ff6b6b !important;
-}
-body.light .row-verysoon td,
-body.light .row-verysoon .status-pill {
-  color: #b33a3a !important;
-}
-
-.row-soon a, .row-verysoon a {
-  color: inherit !important;
-}
-
-/* ---------------- ICON SPACING ---------------- */
-.boss-icon { margin-right:.45rem; font-size:1.05rem; vertical-align:middle; }
-
-/* ---------------- SEPARATOR ---------------- */
+/* Separator */
 .separator{
   text-align:center;
   font-weight:700;
@@ -152,7 +110,7 @@ body.light .row-verysoon .status-pill {
   border-bottom:2px solid rgba(0,0,0,0.04);
 }
 
-/* ---------------- SCROLL-TO-TOP ---------------- */
+/* Scroll button */
 #scrollTopBtn{
   position:fixed; right:18px; bottom:18px;
   width:44px; height:44px; border-radius:8px;
@@ -162,7 +120,7 @@ body.light .row-verysoon .status-pill {
   cursor:pointer; z-index:60;
 }
 
-/* ---------------- DARK MODE ---------------- */
+/* Dark Mode */
 body.dark{
   background:#1d1f24;
   color:#e6eef8;
@@ -171,19 +129,14 @@ body.dark thead th{ background:rgba(255,255,255,0.05); }
 body.dark table{ background:#23252b; }
 body.dark tbody td{ border-bottom:1px solid rgba(255,255,255,0.04); }
 
-/* ---------------- LIGHT MODE ---------------- */
-body.light{ background:#f5f7fb; color:#111; }
+/* Light Mode */
+body.light{
+  background:#f5f7fb;
+  color:#111;
+}
 body.light thead th{ background:#eceff3; }
 body.light table{ background:#fff; }
 
-/* ---------------- RESPONSIVE ---------------- */
-@media (max-width:900px){
-  thead th, th, td{ padding:.55rem .6rem; font-size:.92rem; }
-}
-@media (max-width:520px){
-  #title{ display:none; }
-  .boss-icon{ margin-right:.3rem; }
-}
 </style>
 </head>
 
@@ -199,14 +152,25 @@ body.light table{ background:#fff; }
   <button id="themeToggle">🌙</button>
 </header>
 
-<!-- ⭐ UPDATED LEGEND ⭐ -->
+<!-- ⭐ UPDATED LEGEND -->
 <div id="legend">
-  🔴 BloodMoon • 🟦 Alliance • 🔰 Kransia
+  <span class="bm-icon">
+    <svg viewBox="0 0 64 64">
+      <defs>
+        <radialGradient id="bmSun" cx="0.5" cy="0.5" r="0.6">
+          <stop offset="0" stop-color="#ff9999"/>
+          <stop offset="1" stop-color="#990000"/>
+        </radialGradient>
+      </defs>
+      <circle cx="32" cy="32" r="22" fill="url(#bmSun)" />
+      <circle cx="26" cy="26" r="18" fill="#200000" opacity="0.85"/>
+    </svg>
+  </span>
+  BloodMoon • 🛡️ Alliance • 🔰 Kransia
 </div>
 
 <main>
 
-<!-- FIXED TODAY -->
 <h3>⚡ Fixed Respawns Today</h3>
 <div class="table-wrapper">
 <table id="fixedToday">
@@ -215,7 +179,6 @@ body.light table{ background:#fff; }
 </table>
 </div>
 
-<!-- DYNAMIC -->
 <h3>🔄 Dynamic Respawns</h3>
 <div class="table-wrapper">
 <table id="dynamicTable">
@@ -224,7 +187,6 @@ body.light table{ background:#fff; }
 </table>
 </div>
 
-<!-- FIXED OTHER -->
 <div id="fixedSeparator" class="separator" style="display:none;">
 ──── Other Fixed Respawns ────
 </div>
@@ -241,43 +203,50 @@ body.light table{ background:#fff; }
 <div id="scrollTopBtn">↑</div>
 
 <script>
-/* ---------------- Sheet URL ---------------- */
+/* ---------------- SHEET URL ---------------- */
 const sheetURL =
   "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* ---------------- Helpers ---------------- */
+/* ---------------- BLOODMOON SVG ---------------- */
+const bloodMoonSVG = `
+<span class="bm-icon">
+<svg viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bmSun" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#ff9999"/>
+      <stop offset="1" stop-color="#990000"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="22" fill="url(#bmSun)" />
+  <circle cx="26" cy="26" r="18" fill="#200000" opacity="0.85"/>
+</svg>
+</span>
+`;
+
+/* ---------------- NORMAL HELPERS (UNCHANGED) ---------------- */
 function normalize(str){
-  return String(str||"")
-    .normalize("NFKC")
-    .replace(/[\u200B-\u200D\uFEFF]/g,"")
-    .trim().toLowerCase();
+  return String(str||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().toLowerCase();
 }
+
 function parseDeathTime(str){
   const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
   if(!m) return new Date(NaN);
   const [,MM,DD,YYYY,hh,mm] = m.map(Number);
   return new Date(YYYY,MM-1,DD,hh,mm);
 }
-function formatPH(d){
-  return d.toLocaleString("en-US",{
-    timeZone:"Asia/Manila",
-    month:"short", day:"numeric",
-    hour:"numeric", minute:"2-digit", hour12:true
-  });
-}
+
 function formatFullPH(d){
-  const weekday = d.toLocaleDateString("en-US",{weekday:"long",timeZone:"Asia/Manila"});
-  return `${formatPH(d)} (${weekday})`;
+  const w = d.toLocaleDateString("en-US",{weekday:"long",timeZone:"Asia/Manila"});
+  return `${d.toLocaleString("en-US",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true})} (${w})`;
 }
+
 function countdown(t){
   const diff = t - new Date();
   if(diff <= 0) return "Now!";
   const s = Math.floor(diff/1000);
-  const h = Math.floor(s/3600);
-  const m = Math.floor((s%3600)/60);
-  const sec = s%60;
-  return `${h}h ${m}m ${sec}s`;
+  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`;
 }
+
 function nextWeekly(day,h,m){
   const now = new Date();
   const r = new Date(now);
@@ -288,7 +257,17 @@ function nextWeekly(day,h,m){
   return r;
 }
 
-/* ---------------- Boss Configs ---------------- */
+/* ---------------- ICON HANDLING ---------------- */
+function displayName(cfg){
+  if(!cfg) return "";
+  const f = cfg.f;
+  if(f.includes("A") && f.includes("B")) return `🔰 ${cfg.name}`;
+  if(f.includes("A")) return `🛡️ ${cfg.name}`;
+  if(f.includes("B")) return `${bloodMoonSVG}${cfg.name}`;
+  return cfg.name;
+}
+
+/* ---------------- BOSS CONFIG (UNCHANGED) ---------------- */
 const bossConfigs = {
   /* Alliance Dynamic */
   "venatus":{name:"Venatus",f:["A"],type:"dyn",hrs:10},
@@ -303,14 +282,10 @@ const bossConfigs = {
   "baron braudmore":{name:"Baron Braudmore",f:["A"],type:"dyn",hrs:32},
 
   /* Alliance Fixed */
-  "clemantis":{name:"Clemantis",f:["A"],type:"fix",sch:[
-    {d:1,h:11,m:30},{d:4,h:19,m:0}]},
-  "saphirus":{name:"Saphirus",f:["A"],type:"fix",sch:[
-    {d:0,h:17,m:0},{d:2,h:11,m:30}]},
-  "neutro":{name:"Neutro",f:["A"],type:"fix",sch:[
-    {d:2,h:19,m:0},{d:4,h:11,m:30}]},
-  "thymele":{name:"Thymele",f:["A"],type:"fix",sch:[
-    {d:1,h:19,m:0},{d:3,h:11,m:30}]},
+  "clemantis":{name:"Clemantis",f:["A"],type:"fix",sch:[{d:1,h:11,m:30},{d:4,h:19,m:0}]},
+  "saphirus":{name:"Saphirus",f:["A"],type:"fix",sch:[{d:0,h:17,m:0},{d:2,h:11,m:30}]},
+  "neutro":{name:"Neutro",f:["A"],type:"fix",sch:[{d:2,h:19,m:0},{d:4,h:11,m:30}]},
+  "thymele":{name:"Thymele",f:["A"],type:"fix",sch:[{d:1,h:19,m:0},{d:3,h:11,m:30}]},
 
   /* BloodMoon Dynamic */
   "wannitas":{name:"Wannitas",f:["B"],type:"dyn",hrs:48},
@@ -330,32 +305,17 @@ const bossConfigs = {
   "milavy":{name:"Milavy",f:["B"],type:"fix",sch:[{d:6,h:15,m:0}]},
   "ringor":{name:"Ringor",f:["B"],type:"fix",sch:[{d:6,h:17,m:0}]},
   "roderick":{name:"Roderick",f:["B"],type:"fix",sch:[{d:5,h:19,m:0}]},
-  "auraq":{name:"Auraq",f:["B"],type:"fix",sch:[
-    {d:5,h:22,m:0},{d:3,h:21,m:0}]},
+  "auraq":{name:"Auraq",f:["B"],type:"fix",sch:[{d:5,h:22,m:0},{d:3,h:21,m:0}]},
   "chaiflock":{name:"Chaiflock",f:["B"],type:"fix",sch:[{d:6,h:22,m:0}]},
   "benji":{name:"Benji",f:["B"],type:"fix",sch:[{d:0,h:21,m:0}]},
 
-  /* Shared (Kransia) */
-  "icaruthia":{name:"Icaruthia",f:["A","B"],type:"fix",sch:[
-    {d:2,h:21,m:0},{d:5,h:21,m:0}]},
-  "motti":{name:"Motti",f:["A","B"],type:"fix",sch:[
-    {d:3,h:19,m:0},{d:6,h:19,m:0}]},
-  "nevaeh":{name:"Nevaeh",f:["A","B"],type:"fix",sch:[
-    {d:0,h:22,m:0}]}
+  /* Kransia Shared */
+  "icaruthia":{name:"Icaruthia",f:["A","B"],type:"fix",sch:[{d:2,h:21,m:0},{d:5,h:21,m:0}]},
+  "motti":{name:"Motti",f:["A","B"],type:"fix",sch:[{d:3,h:19,m:0},{d:6,h:19,m:0}]},
+  "nevaeh":{name:"Nevaeh",f:["A","B"],type:"fix",sch:[{d:0,h:22,m:0}]}
 };
 
-/* ICON DISPLAY */
-function displayName(cfg){
-  if(!cfg) return "";
-  const f = cfg.f;
-  const shared = f.includes("A") && f.includes("B");
-  if(shared) return `🔰 ${cfg.name}`;   /* ICON ONLY (Kransia legend explains it) */
-  if(f.includes("A")) return `🟦 ${cfg.name}`;
-  if(f.includes("B")) return `🔴 ${cfg.name}`;
-  return cfg.name;
-}
-
-/* FIND MATCHED CONFIG */
+/* ---------------- FIND CONFIG ---------------- */
 function findCfg(sheetName){
   const key = normalize(sheetName);
   for(const cfg of Object.values(bossConfigs)){
@@ -364,7 +324,7 @@ function findCfg(sheetName){
   return null;
 }
 
-/* FILTER */
+/* ---------------- FILTER ---------------- */
 let filterMode = localStorage.getItem("filterMode") || "All";
 document.getElementById("factionFilter").value = filterMode;
 
@@ -380,13 +340,12 @@ document.getElementById("factionFilter").addEventListener("change",e=>{
   render();
 });
 
-/* THEME */
+/* ---------------- THEME ---------------- */
 function setTheme(x){
   document.body.classList.remove("dark","light");
   document.body.classList.add(x);
   localStorage.setItem("theme", x);
-  document.getElementById("themeToggle").textContent =
-    x==="dark" ? "🌙" : "☀️";
+  document.getElementById("themeToggle").textContent = x==="dark" ? "🌙" : "☀️";
 }
 setTheme(localStorage.getItem("theme") || "dark");
 
@@ -394,9 +353,8 @@ document.getElementById("themeToggle").addEventListener("click",()=>{
   setTheme(document.body.classList.contains("dark") ? "light" : "dark");
 });
 
-/* FETCH */
+/* ---------------- LOAD SHEET ---------------- */
 let rows = [];
-
 async function loadSheet(){
   try{
     const res = await fetch(sheetURL);
@@ -406,7 +364,7 @@ async function loadSheet(){
 }
 setInterval(loadSheet,60000);
 
-/* BUILD DYNAMIC */
+/* ---------------- BUILD DYNAMIC ---------------- */
 function buildDynamic(){
   const latest = {};
   rows.forEach(r=>{
@@ -420,17 +378,16 @@ function buildDynamic(){
   });
 
   return Object.entries(latest).map(([key,death])=>{
-    const cfg = Object.values(bossConfigs)
-      .find(x=>normalize(x.name)===key);
+    const cfg = Object.values(bossConfigs).find(x=>normalize(x.name)===key);
     return { cfg, resp:new Date(death.getTime()+cfg.hrs*3600000) };
   });
 }
 
-/* RENDER */
+/* ---------------- RENDER TABLES ---------------- */
 function render(){
   const now = new Date();
 
-  /* DYNAMIC ---------------------- */
+  /* Dynamic */
   const dyn = buildDynamic()
     .filter(x=>passFilter(x.cfg))
     .sort((a,b)=>a.resp-b.resp);
@@ -445,16 +402,16 @@ function render(){
     let st = "📌 Scheduled";
     let rowClass = "";
 
-    if (diff <= 0) {
-        st = "🟢 Alive";
-    } else if (hours < 1) {
-        st = "⏳ Very Soon";
-        rowClass = "row-verysoon";
-    } else if (hours < 6) {
-        st = "🕒 Soon";
-        rowClass = "row-soon";
-    } else if (x.resp.toDateString() === now.toDateString()) {
-        st = "⚡ Today";
+    if(diff <= 0){
+      st = "🟢 Alive";
+    } else if(hours < 1){
+      st = "⏳ Very Soon";
+      rowClass = "row-verysoon";
+    } else if(hours < 6){
+      st = "🕒 Soon";
+      rowClass = "row-soon";
+    } else if(x.resp.toDateString() === now.toDateString()){
+      st = "⚡ Today";
     }
 
     dynBody.insertAdjacentHTML("beforeend",`
@@ -467,23 +424,24 @@ function render(){
     `);
   });
 
-  /* FIXED TODAY ------------------ */
+  /* Fixed Today */
   const today = now.getDay();
   const fToday=[], fOther=[];
 
   Object.values(bossConfigs).forEach(cfg=>{
     if(cfg.type!=="fix" || !passFilter(cfg)) return;
+
     cfg.sch.forEach(s=>{
       const rt = new Date(now);
       rt.setSeconds(0,0);
       rt.setHours(s.h,s.m,0,0);
 
-      if(s.d===today && rt>now){
+      if(s.d === today && rt > now){
         fToday.push({cfg,resp:rt});
       }
 
       const nxt = nextWeekly(s.d,s.h,s.m);
-      if(nxt.toDateString()!==now.toDateString()){
+      if(nxt.toDateString() !== now.toDateString()){
         fOther.push({cfg,resp:nxt});
       }
     });
@@ -495,15 +453,14 @@ function render(){
   const ft = document.querySelector("#fixedToday tbody");
   ft.innerHTML="";
   fToday.forEach(x=>{
-    const diffFT = x.resp - now;
-    const hFT = diffFT / 3600000;
-    let rowClassFT = "";
-
-    if (diffFT > 0 && hFT < 1) rowClassFT = "row-verysoon";
-    else if (diffFT > 0 && hFT < 6) rowClassFT = "row-soon";
+    const diff = x.resp - now;
+    const h = diff / 3600000;
+    let rowClass="";
+    if(diff>0 && h<1) rowClass="row-verysoon";
+    else if(diff>0 && h<6) rowClass="row-soon";
 
     ft.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}" class="${rowClassFT}">
+      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
         <td>${displayName(x.cfg)}</td>
         <td><span class="status-pill">⚡ Today</span></td>
         <td>${formatFullPH(x.resp)}</td>
@@ -512,19 +469,18 @@ function render(){
     `);
   });
 
-  /* FIXED OTHER ------------------ */
+  /* Fixed Others */
   const fo = document.querySelector("#fixedOther tbody");
   fo.innerHTML="";
   fOther.forEach(x=>{
-    const diffFO = x.resp - now;
-    const hFO = diffFO / 3600000;
-    let rowClassFO = "";
-
-    if (diffFO > 0 && hFO < 1) rowClassFO = "row-verysoon";
-    else if (diffFO > 0 && hFO < 6) rowClassFO = "row-soon";
+    const diff = x.resp - now;
+    const h = diff / 3600000;
+    let rowClass="";
+    if(diff>0 && h<1) rowClass="row-verysoon";
+    else if(diff>0 && h<6) rowClass="row-soon";
 
     fo.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}" class="${rowClassFO}">
+      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
         <td>${displayName(x.cfg)}</td>
         <td><span class="status-pill">📌 Scheduled</span></td>
         <td>${formatFullPH(x.resp)}</td>
@@ -538,32 +494,28 @@ function render(){
 
   updateCountdowns();
   if(window._cdInt) clearInterval(window._cdInt);
-  window._cdInt=setInterval(updateCountdowns,1000);
+  window._cdInt = setInterval(updateCountdowns,1000);
 }
 
-/* UPDATE COUNTDOWNS */
+/* ---------------- COUNTDOWN UPDATER ---------------- */
 function updateCountdowns(){
-  const now = new Date();
   document.querySelectorAll("td.cd").forEach(td=>{
     const tr = td.closest("tr");
     const t = new Date(Number(tr.dataset.t));
     td.textContent = countdown(t);
   });
-
-  document.querySelectorAll("#fixedToday tbody tr").forEach(tr=>{
-    if(Number(tr.dataset.t) <= Date.now()) tr.remove();
-  });
 }
 
-/* SCROLL BUTTON */
+/* ---------------- SCROLL BUTTON ---------------- */
 const scrollBtn=document.getElementById("scrollTopBtn");
 window.addEventListener("scroll",()=>{
   scrollBtn.style.display = window.scrollY>300 ? "flex":"none";
 });
 scrollBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
 
-/* START */
+/* ---------------- START ---------------- */
 loadSheet();
+
 </script>
 
 </body>
