@@ -45,6 +45,23 @@ header{
   cursor:pointer;
 }
 
+/* ---------------- LEGEND ---------------- */
+#legend {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+body.dark #legend {
+  color: #e6eef8;
+}
+
+body.light #legend {
+  color: #222;
+}
+
 /* ---------------- TABLE LAYOUT ---------------- */
 main{ max-width:var(--max-width); margin:0 auto; padding:.8rem; }
 h3{ margin:1.1rem 0 .45rem; font-size:1.05rem; display:flex; align-items:center; gap:.5rem; }
@@ -99,35 +116,25 @@ body.dark table tbody tr:nth-child(even) {
   color:inherit !important;
 }
 
-/* ---------------- ROW TEXT COLORS (NO BACKGROUNDS) ---------------- */
-/* remove background highlight; use text color instead */
-
-/* Amber (for <6 hours) - readable in dark and light */
+/* ---------------- ROW TEXT COLORS ---------------- */
 .row-soon td,
 .row-soon .status-pill {
-  color: #ffb300 !important;      /* amber for default */
-  -webkit-text-stroke: 0.0px transparent; /* prevent thin artifacts */
+  color: #ffb300 !important;
 }
-
-/* Slightly darker amber for light mode so it doesn't wash out */
 body.light .row-soon td,
 body.light .row-soon .status-pill {
   color: #b36b00 !important;
 }
 
-/* Red (for <1 hour) - readable in dark and light */
 .row-verysoon td,
 .row-verysoon .status-pill {
-  color: #ff6b6b !important; /* soft red default */
+  color: #ff6b6b !important;
 }
-
-/* Slightly darker red for light mode */
 body.light .row-verysoon td,
 body.light .row-verysoon .status-pill {
   color: #b33a3a !important;
 }
 
-/* Ensure links, small elements inherit row color */
 .row-soon a, .row-verysoon a {
   color: inherit !important;
 }
@@ -157,7 +164,7 @@ body.light .row-verysoon .status-pill {
 
 /* ---------------- DARK MODE ---------------- */
 body.dark{
-  background:#1d1f24; /* softer dark grey */
+  background:#1d1f24;
   color:#e6eef8;
 }
 body.dark thead th{ background:rgba(255,255,255,0.05); }
@@ -191,6 +198,11 @@ body.light table{ background:#fff; }
   </select>
   <button id="themeToggle">🌙</button>
 </header>
+
+<!-- ⭐ UPDATED LEGEND ⭐ -->
+<div id="legend">
+  🔴 BloodMoon • 🟦 Alliance • 🔰 Kransia
+</div>
 
 <main>
 
@@ -323,7 +335,7 @@ const bossConfigs = {
   "chaiflock":{name:"Chaiflock",f:["B"],type:"fix",sch:[{d:6,h:22,m:0}]},
   "benji":{name:"Benji",f:["B"],type:"fix",sch:[{d:0,h:21,m:0}]},
 
-  /* Shared (All Servers) */
+  /* Shared (Kransia) */
   "icaruthia":{name:"Icaruthia",f:["A","B"],type:"fix",sch:[
     {d:2,h:21,m:0},{d:5,h:21,m:0}]},
   "motti":{name:"Motti",f:["A","B"],type:"fix",sch:[
@@ -337,7 +349,7 @@ function displayName(cfg){
   if(!cfg) return "";
   const f = cfg.f;
   const shared = f.includes("A") && f.includes("B");
-  if(shared) return `🔰 ${cfg.name}`;
+  if(shared) return `🔰 ${cfg.name}`;   /* ICON ONLY (Kransia legend explains it) */
   if(f.includes("A")) return `🟦 ${cfg.name}`;
   if(f.includes("B")) return `🔴 ${cfg.name}`;
   return cfg.name;
