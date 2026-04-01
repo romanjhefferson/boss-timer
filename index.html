@@ -23,14 +23,42 @@ select{
   border-radius:6px;
   font-size:14px;
 }
-main{max-width:1200px;margin:auto;padding:10px;}
-h3{margin:12px 0 6px;font-size:15px;font-weight:600;}
 
-table{width:100%;border-collapse:collapse;margin-top:6px;border-radius:8px;overflow:hidden;}
-thead th{background:#2f3136;padding:6px 10px;font-size:14px;text-align:left;}
-tbody td{padding:6px 10px;font-size:14px;}
-tbody tr:nth-child(odd){background:#2a2c31;}
-tbody tr:nth-child(even){background:#26282d;}
+/* WIDER LAYOUT */
+main{
+  max-width:1400px;
+  margin:auto;
+  padding:10px;
+}
+
+h3{
+  margin:12px 0 6px;
+  font-size:15px;
+  font-weight:600;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  border-radius:8px;
+  overflow:hidden;
+}
+
+thead th{
+  background:#2f3136;
+  padding:6px 10px;
+  font-size:14px;
+  text-align:left;
+}
+
+tbody td{
+  padding:6px 10px;
+  font-size:14px;
+}
+
+tbody tr:nth-child(odd){ background:#2a2c31; }
+tbody tr:nth-child(even){ background:#26282d; }
 
 .row-soon td{ color:#ffb300; }
 .row-verysoon td{ color:#ff6b6b; }
@@ -76,16 +104,11 @@ tbody tr:nth-child(even){background:#26282d;}
 
 const sheetURL="https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* GUILDS + KRANSIA */
 const guildMap={
 "Tumier":"BloodMoon","Benji":"BloodMoon","Chaiflock":"BloodMoon","Rakajeth":"BloodMoon","Libitina":"BloodMoon",
-
 "Supore":"Dynasty","Asta":"Dynasty","Ordo":"Dynasty","Secreta":"Dynasty","Auraq":"Dynasty","Catena":"Dynasty","Titore":"Dynasty","Gareth":"Dynasty",
-
 "Roderick":"Requiem","Ringor":"Requiem","Shuliar":"Requiem","Duplican":"Requiem","Metus":"Requiem","Wannitas":"Requiem","Milavy":"Requiem","Baron Braudmore":"Requiem","Amentis":"Requiem",
-
 "Thymele":"Danketsu","General Aquleus":"Danketsu","Lady Dalia":"Danketsu","Neutro":"Danketsu","Saphirus":"Danketsu","Undomiel":"Danketsu","Araneo":"Danketsu","Livera":"Danketsu","Clemantis":"Danketsu","Ego":"Danketsu","Viorent":"Danketsu","Venatus":"Danketsu",
-
 "Icaruthia":"Kransia","Motti":"Kransia","Nevaeh":"Kransia"
 };
 
@@ -96,6 +119,17 @@ if(g==="Requiem") return "🖤";
 if(g==="Danketsu") return "⚔️";
 if(g==="Kransia") return "🔰";
 return "";
+}
+
+/* FORMAT WITH DAY */
+function formatDate(d){
+return d.toLocaleString("en-US",{
+  month:"short",
+  day:"numeric",
+  hour:"numeric",
+  minute:"2-digit",
+  hour12:true
+}) + " (" + d.toLocaleDateString("en-US",{weekday:"long"}) + ")";
 }
 
 const bossConfigs={
@@ -227,7 +261,7 @@ el.insertAdjacentHTML("beforeend",`
 <tr class="${cls}" data-t="${resp.getTime()}">
 <td>${icon(g)} ${boss}</td>
 <td>${isToday?"⚡ Today":diff<=0?"🟢 Alive":"📌 Scheduled"}</td>
-<td>${resp.toLocaleString()}</td>
+<td>${formatDate(resp)}</td>
 <td class="cd">${cd(resp)}</td>
 </tr>
 `);
