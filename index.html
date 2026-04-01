@@ -6,524 +6,265 @@
 <title>Boss Respawn Tracker</title>
 
 <style>
-/* ---------------- GLOBAL ---------------- */
-:root { --max-width: 1400px; --card-radius: 10px; }
-
-html,body{height:100%;}
-body {
-  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-  margin: 0; padding: 0;
-  transition: background .25s, color .25s;
-}
-
-/* ---------------- HEADER ---------------- */
-header{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:.8rem;
-  padding:.9rem 1rem;
-  position:sticky;
-  top:0;
-  z-index:20;
-  background: rgba(255,255,255,0.02);
-  backdrop-filter: blur(4px);
-}
-#title { font-weight:600; margin-right:1rem; }
-
-#factionFilter {
-  padding:.35rem .7rem;
-  border-radius:8px;
-  font-size:.95rem;
-}
-
-#themeToggle {
-  background:none;
-  border:1px solid rgba(0,0,0,.2);
-  border-radius:8px;
-  padding:.35rem .7rem;
-  cursor:pointer;
-}
-
-/* ---------------- LEGEND ---------------- */
-#legend {
-  text-align:center;
-  font-size:0.9rem;
-  margin-top:4px;
-  margin-bottom:8px;
-  opacity:0.85;
-}
-
-/* NEW: BloodMoon SVG styling */
-.bm-icon svg {
-  width: 1.05rem;
-  height: 1.05rem;
-  vertical-align: middle;
-  margin-right: .45rem;
-}
-
-/* ---------------- TABLE & MODE STYLES ---------------- */
-main{ max-width:var(--max-width); margin:0 auto; padding:.8rem; }
-h3{ margin:1.1rem 0 .45rem; font-size:1.05rem; display:flex; align-items:center; gap:.5rem; }
-
-.table-wrapper{ width:100%; overflow-x:auto; margin-bottom:.85rem; }
-table{
-  width:100%; border-collapse:collapse; margin:.25rem 0;
-  border-radius:var(--card-radius); overflow:hidden;
-  min-width:520px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.05);
-}
-thead th, th, td{
-  padding:.6rem .9rem;
-  text-align:left;
-  font-size:.95rem;
-  white-space:nowrap;
-}
-thead th{
-  font-weight:700;
-  background:rgba(0,0,0,0.05);
-}
-tbody td{ border-bottom:1px solid rgba(0,0,0,0.06); }
-
-tbody tr:hover { background: rgba(0,0,0,0.03); }
-
-/* Zebra rows */
-body.light table tbody tr:nth-child(odd) { background: rgba(0,0,0,0.04); }
-body.light table tbody tr:nth-child(even) { background: rgba(0,0,0,0.08); }
-body.dark table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.04); }
-body.dark table tbody tr:nth-child(even) { background: rgba(255,255,255,0.07); }
-
-/* Status Color Rows */
-.row-soon td, .row-soon .status-pill { color:#ffb300 !important; }
-body.light .row-soon td { color:#b36b00 !important; }
-
-.row-verysoon td, .row-verysoon .status-pill { color:#ff6b6b !important; }
-body.light .row-verysoon td { color:#b33a3a !important; }
-
-/* Separator */
-.separator{
-  text-align:center;
-  font-weight:700;
-  margin:1rem 0 .6rem;
-  padding:.4rem;
-  border-top:2px solid rgba(0,0,0,0.06);
-  border-bottom:2px solid rgba(0,0,0,0.04);
-}
-
-/* Scroll button */
-#scrollTopBtn{
-  position:fixed; right:18px; bottom:18px;
-  width:44px; height:44px; border-radius:8px;
-  background:rgba(0,0,0,0.7); color:white;
-  font-size:18px; display:none;
-  align-items:center; justify-content:center;
-  cursor:pointer; z-index:60;
-}
-
-/* Dark Mode */
-body.dark{
+body{
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  margin:0;
   background:#1d1f24;
   color:#e6eef8;
 }
-body.dark thead th{ background:rgba(255,255,255,0.05); }
-body.dark table{ background:#23252b; }
-body.dark tbody td{ border-bottom:1px solid rgba(255,255,255,0.04); }
 
-/* Light Mode */
-body.light{
-  background:#f5f7fb;
-  color:#111;
+header{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:10px;
 }
-body.light thead th{ background:#eceff3; }
-body.light table{ background:#fff; }
+
+select{
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:14px;
+}
+
+/* MATCH OLD UI */
+main{
+  max-width:1200px;
+  margin:auto;
+  padding:10px;
+}
+
+h3{
+  margin:12px 0 6px;
+  font-size:15px;
+  font-weight:600;
+}
+
+/* TABLE STYLE (OLD UI MATCH) */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  border-radius:8px;
+  overflow:hidden;
+}
+
+thead th{
+  background:#2f3136;
+  padding:6px 10px;
+  font-size:14px;
+  text-align:left;
+}
+
+tbody td{
+  padding:6px 10px;
+  font-size:14px;
+}
+
+tbody tr:nth-child(odd){
+  background:#2a2c31;
+}
+
+tbody tr:nth-child(even){
+  background:#26282d;
+}
+
+.row-soon td{ color:#ffb300; }
+.row-verysoon td{ color:#ff6b6b; }
 
 </style>
 </head>
 
-<body class="dark">
+<body>
 
 <header>
-  <div id="title">Boss Respawn Tracker</div>
-  <select id="factionFilter">
-    <option value="All">All</option>
-    <option value="Alliance">Alliance</option>
-    <option value="BloodMoon">BloodMoon</option>
-  </select>
-  <button id="themeToggle">🌙</button>
+<select id="filter">
+<option value="All">All</option>
+<option value="BloodMoon">BloodMoon</option>
+<option value="Dynasty">Dynasty</option>
+<option value="Requiem">Requiem</option>
+<option value="Danketsu">Danketsu</option>
+</select>
 </header>
-
-<!-- ⭐ UPDATED LEGEND -->
-<div id="legend">
-  <span class="bm-icon">
-    <svg viewBox="0 0 64 64">
-      <defs>
-        <radialGradient id="bmSun" cx="0.5" cy="0.5" r="0.6">
-          <stop offset="0" stop-color="#ff9999"/>
-          <stop offset="1" stop-color="#990000"/>
-        </radialGradient>
-      </defs>
-      <circle cx="32" cy="32" r="22" fill="url(#bmSun)" />
-      <circle cx="26" cy="26" r="18" fill="#200000" opacity="0.85"/>
-    </svg>
-  </span>
-  BloodMoon • 🛡️ Alliance • 🔰 Kransia
-</div>
 
 <main>
 
 <h3>⚡ Fixed Respawns Today</h3>
-<div class="table-wrapper">
-<table id="fixedToday">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<table>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody id="fixedToday"></tbody>
 </table>
-</div>
 
 <h3>🔄 Dynamic Respawns</h3>
-<div class="table-wrapper">
-<table id="dynamicTable">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<table>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody id="dynamic"></tbody>
 </table>
-</div>
 
-<div id="fixedSeparator" class="separator" style="display:none;">
-──── Other Fixed Respawns ────
-</div>
-
-<div class="table-wrapper">
-<table id="fixedOther">
-  <thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-  <tbody></tbody>
+<h3>📌 Upcoming Fixed</h3>
+<table>
+<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<tbody id="fixedOther"></tbody>
 </table>
-</div>
 
 </main>
 
-<div id="scrollTopBtn">↑</div>
-
 <script>
-/* ---------------- SHEET URL ---------------- */
-const sheetURL =
-  "https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* ---------------- BLOODMOON SVG ---------------- */
-const bloodMoonSVG = `
-<span class="bm-icon">
-<svg viewBox="0 0 64 64">
-  <defs>
-    <radialGradient id="bmSun" cx="0.5" cy="0.5" r="0.6">
-      <stop offset="0" stop-color="#ff9999"/>
-      <stop offset="1" stop-color="#990000"/>
-    </radialGradient>
-  </defs>
-  <circle cx="32" cy="32" r="22" fill="url(#bmSun)" />
-  <circle cx="26" cy="26" r="18" fill="#200000" opacity="0.85"/>
-</svg>
-</span>
-`;
+const sheetURL="https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
-/* ---------------- NORMAL HELPERS (UNCHANGED) ---------------- */
-function normalize(str){
-  return String(str||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().toLowerCase();
-}
-
-function parseDeathTime(str){
-  const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{1,2})/);
-  if(!m) return new Date(NaN);
-  const [,MM,DD,YYYY,hh,mm] = m.map(Number);
-  return new Date(YYYY,MM-1,DD,hh,mm);
-}
-
-function formatFullPH(d){
-  const w = d.toLocaleDateString("en-US",{weekday:"long",timeZone:"Asia/Manila"});
-  return `${d.toLocaleString("en-US",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true})} (${w})`;
-}
-
-function countdown(t){
-  const diff = t - new Date();
-  if(diff <= 0) return "Now!";
-  const s = Math.floor(diff/1000);
-  return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`;
-}
-
-function nextWeekly(day,h,m){
-  const now = new Date();
-  const r = new Date(now);
-  r.setHours(h,m,0,0);
-  let diff = (day - r.getDay() + 7) % 7;
-  if(diff===0 && r<=now) diff=7;
-  r.setDate(r.getDate()+diff);
-  return r;
-}
-
-/* ---------------- ICON HANDLING ---------------- */
-function displayName(cfg){
-  if(!cfg) return "";
-  const f = cfg.f;
-  if(f.includes("A") && f.includes("B")) return `🔰 ${cfg.name}`;
-  if(f.includes("A")) return `🛡️ ${cfg.name}`;
-  if(f.includes("B")) return `${bloodMoonSVG}${cfg.name}`;
-  return cfg.name;
-}
-
-/* ---------------- BOSS CONFIG (UNCHANGED) ---------------- */
-const bossConfigs = {
-  /* Alliance Dynamic */
-  "venatus":{name:"Venatus",f:["A"],type:"dyn",hrs:10},
-  "viorent":{name:"Viorent",f:["A"],type:"dyn",hrs:10},
-  "ego":{name:"Ego",f:["A"],type:"dyn",hrs:21},
-  "livera":{name:"Livera",f:["A"],type:"dyn",hrs:24},
-  "araneo":{name:"Araneo",f:["A"],type:"dyn",hrs:24},
-  "undomiel":{name:"Undomiel",f:["A"],type:"dyn",hrs:24},
-  "lady dalia":{name:"Lady Dalia",f:["A"],type:"dyn",hrs:18},
-  "general aquleus":{name:"General Aquleus",f:["A"],type:"dyn",hrs:29},
-  "amentis":{name:"Amentis",f:["A"],type:"dyn",hrs:29},
-  "baron braudmore":{name:"Baron Braudmore",f:["A"],type:"dyn",hrs:32},
-
-  /* Alliance Fixed */
-  "clemantis":{name:"Clemantis",f:["A"],type:"fix",sch:[{d:1,h:11,m:30},{d:4,h:19,m:0}]},
-  "saphirus":{name:"Saphirus",f:["A"],type:"fix",sch:[{d:0,h:17,m:0},{d:2,h:11,m:30}]},
-  "neutro":{name:"Neutro",f:["A"],type:"fix",sch:[{d:2,h:19,m:0},{d:4,h:11,m:30}]},
-  "thymele":{name:"Thymele",f:["A"],type:"fix",sch:[{d:1,h:19,m:0},{d:3,h:11,m:30}]},
-
-  /* BloodMoon Dynamic */
-  "wannitas":{name:"Wannitas",f:["B"],type:"dyn",hrs:48},
-  "metus":{name:"Metus",f:["B"],type:"dyn",hrs:48},
-  "duplican":{name:"Duplican",f:["B"],type:"dyn",hrs:48},
-  "shuliar":{name:"Shuliar",f:["B"],type:"dyn",hrs:35},
-  "gareth":{name:"Gareth",f:["B"],type:"dyn",hrs:32},
-  "titore":{name:"Titore",f:["B"],type:"dyn",hrs:37},
-  "larba":{name:"Larba",f:["B"],type:"dyn",hrs:35},
-  "catena":{name:"Catena",f:["B"],type:"dyn",hrs:35},
-  "secreta":{name:"Secreta",f:["B"],type:"dyn",hrs:62},
-  "ordo":{name:"Ordo",f:["B"],type:"dyn",hrs:62},
-  "asta":{name:"Asta",f:["B"],type:"dyn",hrs:62},
-  "supore":{name:"Supore",f:["B"],type:"dyn",hrs:62},
-
-  /* BloodMoon Fixed */
-  "milavy":{name:"Milavy",f:["B"],type:"fix",sch:[{d:6,h:15,m:0}]},
-  "ringor":{name:"Ringor",f:["B"],type:"fix",sch:[{d:6,h:17,m:0}]},
-  "roderick":{name:"Roderick",f:["B"],type:"fix",sch:[{d:5,h:19,m:0}]},
-  "auraq":{name:"Auraq",f:["B"],type:"fix",sch:[{d:5,h:22,m:0},{d:3,h:21,m:0}]},
-  "chaiflock":{name:"Chaiflock",f:["B"],type:"fix",sch:[{d:6,h:22,m:0}]},
-  "benji":{name:"Benji",f:["B"],type:"fix",sch:[{d:0,h:21,m:0}]},
-  "tumier":{name:"Tumier",f:["B"],type:"fix",sch:[{d:0,h:19,m:0}]},
-  "libitina":{name:"Libitina",f:["B"],type:"fix",sch:[{d:1,h:21,m:0},{d:6,h:21,m:0}]},
-  "rakajeth":{name:"Rakajeth",f:["B"],type:"fix",sch:[{d:2,h:22,m:0},{d:0,h:19,m:0}]},
-
-  /* Kransia Shared */
-  "icaruthia":{name:"Icaruthia",f:["A","B"],type:"fix",sch:[{d:2,h:21,m:0},{d:5,h:21,m:0}]},
-  "motti":{name:"Motti",f:["A","B"],type:"fix",sch:[{d:3,h:19,m:0},{d:6,h:19,m:0}]},
-  "nevaeh":{name:"Nevaeh",f:["A","B"],type:"fix",sch:[{d:0,h:22,m:0}]}
+const guildMap={
+"Tumier":"BloodMoon","Benji":"BloodMoon","Chaiflock":"BloodMoon","Rakajeth":"BloodMoon","Libitina":"BloodMoon",
+"Supore":"Dynasty","Asta":"Dynasty","Ordo":"Dynasty","Secreta":"Dynasty","Auraq":"Dynasty","Catena":"Dynasty","Titore":"Dynasty","Gareth":"Dynasty",
+"Roderick":"Requiem","Ringor":"Requiem","Shuliar":"Requiem","Duplican":"Requiem","Metus":"Requiem","Wannitas":"Requiem","Milavy":"Requiem","Baron Braudmore":"Requiem","Amentis":"Requiem",
+"Thymele":"Danketsu","General Aquleus":"Danketsu","Lady Dalia":"Danketsu","Neutro":"Danketsu","Saphirus":"Danketsu","Undomiel":"Danketsu","Araneo":"Danketsu","Livera":"Danketsu","Clemantis":"Danketsu","Ego":"Danketsu","Viorent":"Danketsu","Venatus":"Danketsu"
 };
 
-/* ---------------- FIND CONFIG ---------------- */
-function findCfg(sheetName){
-  const key = normalize(sheetName);
-  for(const cfg of Object.values(bossConfigs)){
-    if(key.includes(normalize(cfg.name))) return cfg;
-  }
-  return null;
+function icon(g){
+if(g==="BloodMoon") return "🌙";
+if(g==="Dynasty") return "👑";
+if(g==="Requiem") return "🖤";
+if(g==="Danketsu") return "⚔️";
+return "";
 }
 
-/* ---------------- FILTER ---------------- */
-let filterMode = localStorage.getItem("filterMode") || "All";
-document.getElementById("factionFilter").value = filterMode;
+const bossConfigs={
+"Venatus":{type:"dyn",hrs:10},"Viorent":{type:"dyn",hrs:10},"Ego":{type:"dyn",hrs:21},
+"Livera":{type:"dyn",hrs:24},"Araneo":{type:"dyn",hrs:24},"Undomiel":{type:"dyn",hrs:24},
+"Lady Dalia":{type:"dyn",hrs:18},"General Aquleus":{type:"dyn",hrs:29},
+"Amentis":{type:"dyn",hrs:29},"Baron Braudmore":{type:"dyn",hrs:32},
+"Wannitas":{type:"dyn",hrs:48},"Metus":{type:"dyn",hrs:48},"Duplican":{type:"dyn",hrs:48},
+"Shuliar":{type:"dyn",hrs:35},"Gareth":{type:"dyn",hrs:32},
+"Titore":{type:"dyn",hrs:37},"Catena":{type:"dyn",hrs:35},
+"Secreta":{type:"dyn",hrs:62},"Ordo":{type:"dyn",hrs:62},
+"Asta":{type:"dyn",hrs:62},"Supore":{type:"dyn",hrs:62},
+"Clemantis":{type:"fix",sch:[{d:1,h:11,m:30},{d:4,h:19,m:0}]},
+"Saphirus":{type:"fix",sch:[{d:0,h:17,m:0},{d:2,h:11,m:30}]},
+"Neutro":{type:"fix",sch:[{d:2,h:19,m:0},{d:4,h:11,m:30}]},
+"Thymele":{type:"fix",sch:[{d:1,h:19,m:0},{d:3,h:11,m:30}]},
+"Milavy":{type:"fix",sch:[{d:6,h:15,m:0}]},
+"Ringor":{type:"fix",sch:[{d:6,h:17,m:0}]},
+"Roderick":{type:"fix",sch:[{d:5,h:19,m:0}]},
+"Auraq":{type:"fix",sch:[{d:5,h:22,m:0},{d:3,h:21,m:0}]},
+"Chaiflock":{type:"fix",sch:[{d:6,h:22,m:0}]},
+"Benji":{type:"fix",sch:[{d:0,h:21,m:0}]},
+"Tumier":{type:"fix",sch:[{d:0,h:19,m:0}]},
+"Libitina":{type:"fix",sch:[{d:1,h:21,m:0},{d:6,h:21,m:0}]},
+"Rakajeth":{type:"fix",sch:[{d:2,h:22,m:0},{d:0,h:19,m:0}]}
+};
 
-function passFilter(cfg){
-  if(filterMode==="All") return true;
-  if(filterMode==="Alliance") return cfg.f.includes("A");
-  if(filterMode==="BloodMoon") return cfg.f.includes("B");
+function parse(str){
+const m=str.match(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+)/);
+return m?new Date(m[3],m[1]-1,m[2],m[4],m[5]):null;
 }
 
-document.getElementById("factionFilter").addEventListener("change",e=>{
-  filterMode = e.target.value;
-  localStorage.setItem("filterMode", filterMode);
-  render();
+function cd(t){
+const d=t-new Date();
+if(d<=0)return"Now!";
+const s=Math.floor(d/1000);
+return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`;
+}
+
+function next(d,h,m){
+const n=new Date();
+const r=new Date(n);
+r.setHours(h,m,0,0);
+let diff=(d-r.getDay()+7)%7;
+if(diff===0&&r<=n)diff=7;
+r.setDate(r.getDate()+diff);
+return r;
+}
+
+let rows=[];
+let selected="All";
+
+document.getElementById("filter").addEventListener("change",e=>{
+selected=e.target.value;
+localStorage.setItem("guildFilter",selected);
+render();
 });
 
-/* ---------------- THEME ---------------- */
-function setTheme(x){
-  document.body.classList.remove("dark","light");
-  document.body.classList.add(x);
-  localStorage.setItem("theme", x);
-  document.getElementById("themeToggle").textContent = x==="dark" ? "🌙" : "☀️";
+selected=localStorage.getItem("guildFilter")||"All";
+document.getElementById("filter").value=selected;
+
+async function load(){
+const r=await fetch(sheetURL);
+rows=await r.json();
+render();
 }
-setTheme(localStorage.getItem("theme") || "dark");
+setInterval(load,60000);
 
-document.getElementById("themeToggle").addEventListener("click",()=>{
-  setTheme(document.body.classList.contains("dark") ? "light" : "dark");
-});
-
-/* ---------------- LOAD SHEET ---------------- */
-let rows = [];
-async function loadSheet(){
-  try{
-    const res = await fetch(sheetURL);
-    rows = await res.json();
-  }catch(e){ rows=[]; }
-  render();
-}
-setInterval(loadSheet,60000);
-
-/* ---------------- BUILD DYNAMIC ---------------- */
-function buildDynamic(){
-  const latest = {};
-  rows.forEach(r=>{
-    const cfg = findCfg(r.Boss);
-    if(!cfg || cfg.type!=="dyn") return;
-    if(!r.DeathTime) return;
-    const d = parseDeathTime(r.DeathTime);
-    if(isNaN(d)) return;
-    const key = normalize(cfg.name);
-    if(!latest[key] || d>latest[key]) latest[key]=d;
-  });
-
-  return Object.entries(latest).map(([key,death])=>{
-    const cfg = Object.values(bossConfigs).find(x=>normalize(x.name)===key);
-    return { cfg, resp:new Date(death.getTime()+cfg.hrs*3600000) };
-  });
-}
-
-/* ---------------- RENDER TABLES ---------------- */
 function render(){
-  const now = new Date();
+const now=new Date();
 
-  /* Dynamic */
-  const dyn = buildDynamic()
-    .filter(x=>passFilter(x.cfg))
-    .sort((a,b)=>a.resp-b.resp);
+const dynBody=document.getElementById("dynamic");
+const ft=document.getElementById("fixedToday");
+const fo=document.getElementById("fixedOther");
 
-  const dynBody = document.querySelector("#dynamicTable tbody");
-  dynBody.innerHTML="";
+dynBody.innerHTML="";ft.innerHTML="";fo.innerHTML="";
 
-  dyn.forEach(x=>{
-    const diff = x.resp - now;
-    const hours = diff / 3600000;
+const latest={};
 
-    let st = "📌 Scheduled";
-    let rowClass = "";
-
-    if(diff <= 0){
-      st = "🟢 Alive";
-    } else if(hours < 1){
-      st = "⏳ Very Soon";
-      rowClass = "row-verysoon";
-    } else if(hours < 6){
-      st = "🕒 Soon";
-      rowClass = "row-soon";
-    } else if(x.resp.toDateString() === now.toDateString()){
-      st = "⚡ Today";
-    }
-
-    dynBody.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
-        <td>${displayName(x.cfg)}</td>
-        <td><span class="status-pill">${st}</span></td>
-        <td>${formatFullPH(x.resp)}</td>
-        <td class="cd">${countdown(x.resp)}</td>
-      </tr>
-    `);
-  });
-
-  /* Fixed Today */
-  const today = now.getDay();
-  const fToday=[], fOther=[];
-
-  Object.values(bossConfigs).forEach(cfg=>{
-    if(cfg.type!=="fix" || !passFilter(cfg)) return;
-
-    cfg.sch.forEach(s=>{
-      const rt = new Date(now);
-      rt.setSeconds(0,0);
-      rt.setHours(s.h,s.m,0,0);
-
-      if(s.d === today && rt > now){
-        fToday.push({cfg,resp:rt});
-      }
-
-      const nxt = nextWeekly(s.d,s.h,s.m);
-      if(nxt.toDateString() !== now.toDateString()){
-        fOther.push({cfg,resp:nxt});
-      }
-    });
-  });
-
-  fToday.sort((a,b)=>a.resp-b.resp);
-  fOther.sort((a,b)=>a.resp-b.resp);
-
-  const ft = document.querySelector("#fixedToday tbody");
-  ft.innerHTML="";
-  fToday.forEach(x=>{
-    const diff = x.resp - now;
-    const h = diff / 3600000;
-    let rowClass="";
-    if(diff>0 && h<1) rowClass="row-verysoon";
-    else if(diff>0 && h<6) rowClass="row-soon";
-
-    ft.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
-        <td>${displayName(x.cfg)}</td>
-        <td><span class="status-pill">⚡ Today</span></td>
-        <td>${formatFullPH(x.resp)}</td>
-        <td class="cd">${countdown(x.resp)}</td>
-      </tr>
-    `);
-  });
-
-  /* Fixed Others */
-  const fo = document.querySelector("#fixedOther tbody");
-  fo.innerHTML="";
-  fOther.forEach(x=>{
-    const diff = x.resp - now;
-    const h = diff / 3600000;
-    let rowClass="";
-    if(diff>0 && h<1) rowClass="row-verysoon";
-    else if(diff>0 && h<6) rowClass="row-soon";
-
-    fo.insertAdjacentHTML("beforeend",`
-      <tr data-t="${x.resp.getTime()}" class="${rowClass}">
-        <td>${displayName(x.cfg)}</td>
-        <td><span class="status-pill">📌 Scheduled</span></td>
-        <td>${formatFullPH(x.resp)}</td>
-        <td class="cd">${countdown(x.resp)}</td>
-      </tr>
-    `);
-  });
-
-  document.getElementById("fixedSeparator").style.display =
-    fOther.length ? "block" : "none";
-
-  updateCountdowns();
-  if(window._cdInt) clearInterval(window._cdInt);
-  window._cdInt = setInterval(updateCountdowns,1000);
-}
-
-/* ---------------- COUNTDOWN UPDATER ---------------- */
-function updateCountdowns(){
-  document.querySelectorAll("td.cd").forEach(td=>{
-    const tr = td.closest("tr");
-    const t = new Date(Number(tr.dataset.t));
-    td.textContent = countdown(t);
-  });
-}
-
-/* ---------------- SCROLL BUTTON ---------------- */
-const scrollBtn=document.getElementById("scrollTopBtn");
-window.addEventListener("scroll",()=>{
-  scrollBtn.style.display = window.scrollY>300 ? "flex":"none";
+rows.forEach(r=>{
+const boss=r.Boss;
+const cfg=bossConfigs[boss];
+if(!cfg||cfg.type!=="dyn")return;
+const d=parse(r.DeathTime);
+if(!d)return;
+if(!latest[boss]||d>latest[boss])latest[boss]=d;
 });
-scrollBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
 
-/* ---------------- START ---------------- */
-loadSheet();
+Object.entries(latest).forEach(([boss,death])=>{
+const g=guildMap[boss];
+if(!g)return;
+if(selected!=="All"&&selected!==g)return;
+const resp=new Date(death.getTime()+bossConfigs[boss].hrs*3600000);
+addRow(dynBody,boss,g,resp);
+});
 
+Object.entries(bossConfigs).forEach(([boss,cfg])=>{
+if(cfg.type!=="fix")return;
+const g=guildMap[boss];
+if(!g)return;
+if(selected!=="All"&&selected!==g)return;
+cfg.sch.forEach(s=>{
+const resp=next(s.d,s.h,s.m);
+if(resp.toDateString()===now.toDateString()){
+addRow(ft,boss,g,resp,true);
+}else{
+addRow(fo,boss,g,resp);
+}
+});
+});
+
+update();
+}
+
+function addRow(el,boss,g,resp,isToday=false){
+const diff=resp-new Date();
+let cls="";
+if(diff<3600000)cls="row-verysoon";
+else if(diff<21600000)cls="row-soon";
+
+el.insertAdjacentHTML("beforeend",`
+<tr class="${cls}" data-t="${resp.getTime()}">
+<td>${icon(g)} ${boss}</td>
+<td>${isToday?"⚡ Today":diff<=0?"🟢 Alive":"📌 Scheduled"}</td>
+<td>${resp.toLocaleString()}</td>
+<td class="cd">${cd(resp)}</td>
+</tr>
+`);
+}
+
+function update(){
+document.querySelectorAll(".cd").forEach(td=>{
+const t=new Date(Number(td.closest("tr").dataset.t));
+td.textContent=cd(t);
+});
+setTimeout(update,1000);
+}
+
+load();
 </script>
 
 </body>
 </html>
-
-
-
-
