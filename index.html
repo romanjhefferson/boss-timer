@@ -6,18 +6,21 @@
 <title>Boss Respawn Tracker</title>
 
 <style>
+
 body{
   font-family: Inter, Arial, sans-serif;
   margin:0;
   background:#1d1f24;
   color:#e6eef8;
 }
+
 header{
   display:flex;
   justify-content:center;
   gap:10px;
   padding:10px;
 }
+
 select{
   padding:4px 8px;
   border-radius:6px;
@@ -31,7 +34,7 @@ main{
 }
 
 h3{
-  margin:12px 0 6px;
+  margin:14px 0 6px;
   font-size:15px;
   font-weight:600;
 }
@@ -56,17 +59,29 @@ tbody td{
   font-size:14px;
 }
 
-tbody tr:nth-child(odd){ background:#2a2c31; }
-tbody tr:nth-child(even){ background:#26282d; }
+tbody tr:nth-child(odd){
+  background:#2a2c31;
+}
 
-.row-soon td{ color:#ffb300; }
-.row-verysoon td{ color:#ff6b6b; }
+tbody tr:nth-child(even){
+  background:#26282d;
+}
+
+.row-soon td{
+  color:#ffb300;
+}
+
+.row-verysoon td{
+  color:#ff6b6b;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
+
 <select id="filter">
 <option value="All">All</option>
 <option value="BloodMoon">BloodMoon</option>
@@ -75,25 +90,60 @@ tbody tr:nth-child(even){ background:#26282d; }
 <option value="Danketsu">Danketsu</option>
 <option value="Kransia">Kransia</option>
 </select>
+
 </header>
 
 <main>
 
 <h3>⚡ Fixed Respawns Today</h3>
 <table>
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<thead>
+<tr>
+<th>Boss</th>
+<th>Status</th>
+<th>Respawn Time</th>
+<th>Countdown</th>
+</tr>
+</thead>
 <tbody id="fixedToday"></tbody>
 </table>
 
-<h3>🔄 Dynamic Respawns</h3>
+<h3>🔄 Dynamic Respawns - H1</h3>
 <table>
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
-<tbody id="dynamic"></tbody>
+<thead>
+<tr>
+<th>Boss</th>
+<th>Status</th>
+<th>Respawn Time</th>
+<th>Countdown</th>
+</tr>
+</thead>
+<tbody id="dynamicH1"></tbody>
+</table>
+
+<h3>🔄 Dynamic Respawns - H3</h3>
+<table>
+<thead>
+<tr>
+<th>Boss</th>
+<th>Status</th>
+<th>Respawn Time</th>
+<th>Countdown</th>
+</tr>
+</thead>
+<tbody id="dynamicH3"></tbody>
 </table>
 
 <h3>📌 Upcoming Fixed</h3>
 <table>
-<thead><tr><th>Boss</th><th>Status</th><th>Respawn Time</th><th>Countdown</th></tr></thead>
+<thead>
+<tr>
+<th>Boss</th>
+<th>Status</th>
+<th>Respawn Time</th>
+<th>Countdown</th>
+</tr>
+</thead>
 <tbody id="fixedOther"></tbody>
 </table>
 
@@ -101,51 +151,113 @@ tbody tr:nth-child(even){ background:#26282d; }
 
 <script>
 
-const sheetURL="https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
+const sheetURL =
+"https://opensheet.elk.sh/1RoupDDa_fQdcowVCNpL2q1mJDDAw3obvIwRQhOp7Z5E/Sheet1";
 
 const guildMap={
-"Tumier":"Dynasty","Benji":"Dynasty","Chaiflock":"Dynasty","Rakajeth":"Dynasty","Libitina":"Dynasty",
-"Supore":"Dynasty","Asta":"Dynasty","Ordo":"Dynasty","Secreta":"Dynasty","Auraq":"Dynasty","Catena":"Dynasty","Titore":"Dynasty","Gareth":"Dynasty",
-"Roderick":"Requiem","Ringor":"Requiem","Shuliar":"Requiem","Duplican":"Requiem","Metus":"Requiem","Wannitas":"Requiem","Milavy":"Requiem","Baron Braudmore":"Requiem","Amentis":"Requiem","Larba":"Dynasty",
-"Thymele":"Danketsu","General Aquleus":"Danketsu","Lady Dalia":"Danketsu","Neutro":"Danketsu","Saphirus":"Danketsu","Undomiel":"Danketsu","Araneo":"Danketsu","Livera":"Danketsu","Clemantis":"Danketsu","Ego":"Danketsu","Viorent":"Danketsu","Venatus":"Danketsu",
-"Icaruthia":"Kransia","Motti":"Kransia","Nevaeh":"Kransia","Lucus":"Kransia"
+
+"Tumier":"Dynasty",
+"Benji":"Dynasty",
+"Chaiflock":"Dynasty",
+"Rakajeth":"Dynasty",
+"Libitina":"Dynasty",
+
+"Supore":"Dynasty",
+"Asta":"Dynasty",
+"Ordo":"Dynasty",
+"Secreta":"Dynasty",
+"Auraq":"Dynasty",
+"Catena":"Dynasty",
+"Titore":"Dynasty",
+"Gareth":"Dynasty",
+
+"Roderick":"Requiem",
+"Ringor":"Requiem",
+"Shuliar":"Requiem",
+"Duplican":"Requiem",
+"Metus":"Requiem",
+"Wannitas":"Requiem",
+"Milavy":"Requiem",
+"Baron Braudmore":"Requiem",
+"Amentis":"Requiem",
+"Larba":"Dynasty",
+
+"Thymele":"Danketsu",
+"General Aquleus":"Danketsu",
+"Lady Dalia":"Danketsu",
+"Neutro":"Danketsu",
+"Saphirus":"Danketsu",
+"Undomiel":"Danketsu",
+"Araneo":"Danketsu",
+"Livera":"Danketsu",
+"Clemantis":"Danketsu",
+"Ego":"Danketsu",
+"Viorent":"Danketsu",
+"Venatus":"Danketsu",
+
+"Icaruthia":"Kransia",
+"Motti":"Kransia",
+"Nevaeh":"Kransia",
+"Lucus":"Kransia"
+
 };
 
 function icon(g){
+
 if(g==="BloodMoon") return "🌙";
 if(g==="Dynasty") return "👑";
 if(g==="Requiem") return "🖤";
 if(g==="Danketsu") return "⚔️";
 if(g==="Kransia") return "🔰";
+
 return "";
+
 }
 
 function formatDate(d){
+
 return d.toLocaleString("en-US",{
   month:"short",
   day:"numeric",
   hour:"numeric",
   minute:"2-digit",
   hour12:true
-}) + " (" + d.toLocaleDateString("en-US",{weekday:"long"}) + ")";
+}) + " (" + d.toLocaleDateString("en-US",{
+  weekday:"long"
+}) + ")";
+
 }
 
 const bossConfigs={
+
 "Icaruthia":{type:"fix",sch:[{d:2,h:21,m:0},{d:5,h:21,m:0}]},
 "Motti":{type:"fix",sch:[{d:3,h:19,m:0},{d:6,h:19,m:0}]},
 "Nevaeh":{type:"fix",sch:[{d:0,h:22,m:0}]},
 "Lucus":{type:"fix",sch:[{d:6,h:22,m:0}]},
 
-"Venatus":{type:"dyn",hrs:10},"Viorent":{type:"dyn",hrs:10},"Ego":{type:"dyn",hrs:21},
-"Livera":{type:"dyn",hrs:24},"Araneo":{type:"dyn",hrs:24},"Undomiel":{type:"dyn",hrs:24},
-"Lady Dalia":{type:"dyn",hrs:18},"General Aquleus":{type:"dyn",hrs:29},
-"Amentis":{type:"dyn",hrs:29},"Baron Braudmore":{type:"dyn",hrs:32},
+"Venatus":{type:"dyn",hrs:10},
+"Viorent":{type:"dyn",hrs:10},
+"Ego":{type:"dyn",hrs:21},
+"Livera":{type:"dyn",hrs:24},
+"Araneo":{type:"dyn",hrs:24},
+"Undomiel":{type:"dyn",hrs:24},
+"Lady Dalia":{type:"dyn",hrs:18},
+"General Aquleus":{type:"dyn",hrs:29},
 
-"Wannitas":{type:"dyn",hrs:48},"Metus":{type:"dyn",hrs:48},"Duplican":{type:"dyn",hrs:48},
-"Shuliar":{type:"dyn",hrs:35},"Larba":{type:"dyn",hrs:35},"Gareth":{type:"dyn",hrs:32},
-"Titore":{type:"dyn",hrs:37},"Catena":{type:"dyn",hrs:35},
-"Secreta":{type:"dyn",hrs:62},"Ordo":{type:"dyn",hrs:62},
-"Asta":{type:"dyn",hrs:62},"Supore":{type:"dyn",hrs:62},
+"Amentis":{type:"dyn",hrs:29},
+"Baron Braudmore":{type:"dyn",hrs:32},
+"Wannitas":{type:"dyn",hrs:48},
+"Metus":{type:"dyn",hrs:48},
+"Duplican":{type:"dyn",hrs:48},
+"Shuliar":{type:"dyn",hrs:35},
+"Larba":{type:"dyn",hrs:35},
+"Gareth":{type:"dyn",hrs:32},
+"Titore":{type:"dyn",hrs:37},
+"Catena":{type:"dyn",hrs:35},
+"Secreta":{type:"dyn",hrs:62},
+"Ordo":{type:"dyn",hrs:62},
+"Asta":{type:"dyn",hrs:62},
+"Supore":{type:"dyn",hrs:62},
 
 "Clemantis":{type:"fix",sch:[{d:1,h:11,m:30},{d:4,h:19,m:0}]},
 "Saphirus":{type:"fix",sch:[{d:0,h:17,m:0},{d:2,h:11,m:30}]},
@@ -161,120 +273,210 @@ const bossConfigs={
 "Tumier":{type:"fix",sch:[{d:0,h:19,m:0}]},
 "Libitina":{type:"fix",sch:[{d:1,h:21,m:0},{d:6,h:21,m:0}]},
 "Rakajeth":{type:"fix",sch:[{d:2,h:22,m:0},{d:0,h:19,m:0}]}
+
 };
 
 function parse(str){
+
+if(!str) return null;
+
 const m=str.match(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+)/);
-return m?new Date(m[3],m[1]-1,m[2],m[4],m[5]):null;
+
+return m
+? new Date(m[3],m[1]-1,m[2],m[4],m[5])
+: null;
+
 }
 
 function cd(t){
+
 const d=t-new Date();
-if(d<=0)return"Now!";
+
+if(d<=0) return "Now!";
+
 const s=Math.floor(d/1000);
+
 return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`;
+
 }
 
 function next(d,h,m){
+
 const n=new Date();
+
 const r=new Date(n);
+
 r.setHours(h,m,0,0);
+
 let diff=(d-r.getDay()+7)%7;
-if(diff===0&&r<=n)diff=7;
+
+if(diff===0 && r<=n) diff=7;
+
 r.setDate(r.getDate()+diff);
+
 return r;
+
 }
 
 let rows=[];
+
 let selected="All";
 
-document.getElementById("filter").addEventListener("change",e=>{
+document.getElementById("filter")
+.addEventListener("change",e=>{
+
 selected=e.target.value;
+
 localStorage.setItem("guildFilter",selected);
+
 render();
+
 });
 
-selected=localStorage.getItem("guildFilter")||"All";
+selected=localStorage.getItem("guildFilter") || "All";
+
 document.getElementById("filter").value=selected;
 
 async function load(){
+
 const r=await fetch(sheetURL);
+
 rows=await r.json();
+
 render();
+
 }
+
 setInterval(load,60000);
 
 function render(){
+
 const now=new Date();
 
-const dynBody=document.getElementById("dynamic");
+const dynH1=document.getElementById("dynamicH1");
+const dynH3=document.getElementById("dynamicH3");
+
 const ft=document.getElementById("fixedToday");
 const fo=document.getElementById("fixedOther");
 
-dynBody.innerHTML="";ft.innerHTML="";fo.innerHTML="";
-
-const latest={};
-
-rows.forEach(r=>{
-const boss=r.Boss;
-const cfg=bossConfigs[boss];
-if(!cfg||cfg.type!=="dyn")return;
-const d=parse(r.DeathTime);
-if(!d)return;
-if(!latest[boss]||d>latest[boss])latest[boss]=d;
-});
-
-Object.entries(latest).forEach(([boss,death])=>{
-const g=guildMap[boss];
-if(!g)return;
-if(selected!=="All"&&selected!==g)return;
-const resp=new Date(death.getTime()+bossConfigs[boss].hrs*3600000);
-addRow(dynBody,boss,g,resp);
-});
+dynH1.innerHTML="";
+dynH3.innerHTML="";
+ft.innerHTML="";
+fo.innerHTML="";
 
 Object.entries(bossConfigs).forEach(([boss,cfg])=>{
-if(cfg.type!=="fix")return;
+
 const g=guildMap[boss];
-if(!g)return;
-if(selected!=="All"&&selected!==g)return;
-cfg.sch.forEach(s=>{
-const resp=next(s.d,s.h,s.m);
-if(resp.toDateString()===now.toDateString()){
-addRow(ft,boss,g,resp,true);
-}else{
-addRow(fo,boss,g,resp);
+
+if(!g) return;
+
+if(selected!=="All" && selected!==g) return;
+
+if(cfg.type==="dyn"){
+
+const row=rows.find(r=>r.Boss===boss);
+
+if(!row) return;
+
+const h1=parse(row["H1 DeathTime"]);
+const h3=parse(row["H3 DeathTime"]);
+
+if(h1){
+
+const resp=new Date(
+h1.getTime()+cfg.hrs*3600000
+);
+
+addRow(dynH1,boss,g,resp);
+
 }
+
+if(h3){
+
+const resp=new Date(
+h3.getTime()+cfg.hrs*3600000
+);
+
+addRow(dynH3,boss,g,resp);
+
+}
+
+}else{
+
+cfg.sch.forEach(s=>{
+
+const resp=next(s.d,s.h,s.m);
+
+if(resp.toDateString()===now.toDateString()){
+
+addRow(ft,boss,g,resp,true);
+
+}else{
+
+addRow(fo,boss,g,resp);
+
+}
+
 });
+
+}
+
 });
 
 update();
+
 }
 
 function addRow(el,boss,g,resp,isToday=false){
+
 const diff=resp-new Date();
+
 let cls="";
-if(diff<3600000)cls="row-verysoon";
-else if(diff<21600000)cls="row-soon";
+
+if(diff<3600000){
+cls="row-verysoon";
+}else if(diff<21600000){
+cls="row-soon";
+}
 
 el.insertAdjacentHTML("beforeend",`
+
 <tr class="${cls}" data-t="${resp.getTime()}">
+
 <td>${icon(g)} ${boss}</td>
-<td>${isToday?"⚡ Today":diff<=0?"🟢 Alive":"📌 Scheduled"}</td>
+
+<td>
+${isToday ? "⚡ Today" : diff<=0 ? "🟢 Alive" : "📌 Scheduled"}
+</td>
+
 <td>${formatDate(resp)}</td>
+
 <td class="cd">${cd(resp)}</td>
+
 </tr>
+
 `);
+
 }
 
 function update(){
+
 document.querySelectorAll(".cd").forEach(td=>{
-const t=new Date(Number(td.closest("tr").dataset.t));
+
+const t=new Date(
+Number(td.closest("tr").dataset.t)
+);
+
 td.textContent=cd(t);
+
 });
+
 setTimeout(update,1000);
+
 }
 
 load();
+
 </script>
 
 </body>
