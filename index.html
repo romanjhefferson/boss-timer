@@ -370,7 +370,14 @@ const g=guildMap[boss];
 
 if(!g) return;
 
-if(selected!=="All" && selected!==g) return;
+const isH3BloodMoon =
+selected==="BloodMoon" && cfg.type==="dyn";
+
+if(
+selected!=="All" &&
+selected!==g &&
+!isH3BloodMoon
+) return;
 
 if(cfg.type==="dyn"){
 
