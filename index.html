@@ -6,7 +6,6 @@
 <title>Boss Respawn Tracker</title>
 
 <style>
-
 body{
   font-family: Inter, Arial, sans-serif;
   margin:0;
@@ -74,14 +73,12 @@ tbody tr:nth-child(even){
 .row-verysoon td{
   color:#ff6b6b;
 }
-
 </style>
 </head>
 
 <body>
 
 <header>
-
 <select id="filter">
 <option value="All">All</option>
 <option value="BloodMoon">BloodMoon</option>
@@ -90,7 +87,6 @@ tbody tr:nth-child(even){
 <option value="Danketsu">Danketsu</option>
 <option value="Kransia">Kransia</option>
 </select>
-
 </header>
 
 <main>
@@ -108,7 +104,7 @@ tbody tr:nth-child(even){
 <tbody id="fixedToday"></tbody>
 </table>
 
-<h3>🔄 Dynamic Respawns - H1</h3>
+<h3>🔄 Dynamic Respawns - H1 (BloodMoon)</h3>
 <table>
 <thead>
 <tr>
@@ -199,33 +195,25 @@ const guildMap={
 "Motti":"Kransia",
 "Nevaeh":"Kransia",
 "Lucus":"Kransia"
-
 };
 
 function icon(g){
-
 if(g==="BloodMoon") return "🌙";
 if(g==="Dynasty") return "👑";
 if(g==="Requiem") return "🖤";
 if(g==="Danketsu") return "⚔️";
 if(g==="Kransia") return "🔰";
-
 return "";
-
 }
 
 function formatDate(d){
-
 return d.toLocaleString("en-US",{
   month:"short",
   day:"numeric",
   hour:"numeric",
   minute:"2-digit",
   hour12:true
-}) + " (" + d.toLocaleDateString("en-US",{
-  weekday:"long"
-}) + ")";
-
+}) + " (" + d.toLocaleDateString("en-US",{weekday:"long"}) + ")";
 }
 
 const bossConfigs={
@@ -273,7 +261,6 @@ const bossConfigs={
 "Tumier":{type:"fix",sch:[{d:0,h:19,m:0}]},
 "Libitina":{type:"fix",sch:[{d:1,h:21,m:0},{d:6,h:21,m:0}]},
 "Rakajeth":{type:"fix",sch:[{d:2,h:22,m:0},{d:0,h:19,m:0}]}
-
 };
 
 function parse(str){
@@ -292,7 +279,7 @@ function cd(t){
 
 const d=t-new Date();
 
-if(d<=0) return "Now!";
+if(d<=0)return "Now!";
 
 const s=Math.floor(d/1000);
 
@@ -303,7 +290,6 @@ return `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m ${s%60}s`;
 function next(d,h,m){
 
 const n=new Date();
-
 const r=new Date(n);
 
 r.setHours(h,m,0,0);
@@ -315,26 +301,18 @@ if(diff===0 && r<=n) diff=7;
 r.setDate(r.getDate()+diff);
 
 return r;
-
 }
 
 let rows=[];
-
 let selected="All";
 
-document.getElementById("filter")
-.addEventListener("change",e=>{
-
+document.getElementById("filter").addEventListener("change",e=>{
 selected=e.target.value;
-
 localStorage.setItem("guildFilter",selected);
-
 render();
-
 });
 
 selected=localStorage.getItem("guildFilter") || "All";
-
 document.getElementById("filter").value=selected;
 
 async function load(){
@@ -344,7 +322,6 @@ const r=await fetch(sheetURL);
 rows=await r.json();
 
 render();
-
 }
 
 setInterval(load,60000);
@@ -368,43 +345,62 @@ Object.entries(bossConfigs).forEach(([boss,cfg])=>{
 
 const g=guildMap[boss];
 
-if(!g) return;
+if(!g)return;
 
-const isH3BloodMoon =
-selected==="BloodMoon" && cfg.type==="dyn";
+if(cfg.type==="dyn"){
+
+if(selected!=="All" && selected!=="BloodMoon" && selected!==g){
+  return;
+}
+
+}else{
 
 if(
 selected!=="All" &&
-selected!==g &&
-!isH3BloodMoon
-) return;
+selected!=="BloodMoon" &&
+selected!==g
+){
+  return;
+}
+
+}
 
 if(cfg.type==="dyn"){
 
 const row=rows.find(r=>r.Boss===boss);
 
-if(!row) return;
+if(!row)return;
 
 const h1=parse(row["H1 DeathTime"]);
 const h3=parse(row["H3 DeathTime"]);
 
-if(h1){
+if(
+h1 &&
+(selected==="All" || selected==="BloodMoon")
+){
 
 const resp=new Date(
 h1.getTime()+cfg.hrs*3600000
 );
 
-addRow(dynH1,boss,g,resp);
+addRow(dynH1,boss,"BloodMoon",resp);
 
 }
 
-if(h3){
+if(
+h3 &&
+selected!=="BloodMoon" &&
+(
+selected==="All" ||
+selected===g
+)
+){
 
 const resp=new Date(
 h3.getTime()+cfg.hrs*3600000
 );
 
-addRow(dynH3,boss,"BloodMoon",resp);
+addRow(dynH3,boss,g,resp);
 
 }
 
@@ -415,13 +411,9 @@ cfg.sch.forEach(s=>{
 const resp=next(s.d,s.h,s.m);
 
 if(resp.toDateString()===now.toDateString()){
-
 addRow(ft,boss,g,resp,true);
-
 }else{
-
 addRow(fo,boss,g,resp);
-
 }
 
 });
@@ -470,16 +462,13 @@ function update(){
 
 document.querySelectorAll(".cd").forEach(td=>{
 
-const t=new Date(
-Number(td.closest("tr").dataset.t)
-);
+const t=new Date(Number(td.closest("tr").dataset.t));
 
 td.textContent=cd(t);
 
 });
 
 setTimeout(update,1000);
-
 }
 
 load();
